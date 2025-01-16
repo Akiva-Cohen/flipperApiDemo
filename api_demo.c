@@ -58,6 +58,12 @@ typedef enum {
 } Views;
 
 typedef struct {
+    uint8_t* bytes;
+    FuriString* furiString;
+    FuriString* fileBrowserResultPath;
+} Resources;
+typedef struct {
+    Resources* Resources;
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
     Submenu* submenu;
@@ -308,16 +314,22 @@ void emptySingleCallback(void* context) {
 void api_demo_scene_on_enter_ByteInputDemo(void* context) {
     ApiDemo* app = context;
     byte_input_set_header_text(app->byteinput, "Your Header Here");
-    uint8_t* bytes = malloc(sizeof(uint8_t) * 8);
+    app->Resources->bytes = malloc(sizeof(uint8_t) * 8);
     byte_input_set_result_callback(
-        app->byteinput, emptySingleCallback, emptySingleCallback, context, bytes, 8);
+        app->byteinput,
+        emptySingleCallback,
+        emptySingleCallback,
+        context,
+        app->Resources->bytes,
+        8);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_ByteInput);
 }
 bool api_demo_scene_on_event_ByteInputDemo(void* context, SceneManagerEvent event) {
     return unusedOnEvent(context, event);
 }
 void api_demo_scene_on_exit_ByteInputDemo(void* context) {
-    UNUSED(context);
+    ApiDemo* app = context;
+    free(app->Resources->bytes);
 }
 
 void api_demo_scene_on_enter_DialogExMenu(void* context) {
@@ -446,9 +458,12 @@ void api_demo_scene_on_exit_FileBrowserText(void* context) {
 
 void api_demo_scene_on_enter_FileBrowserDemo(void* context) {
     ApiDemo* app = context;
-    file_browser_configure(app->filebrowser, ".ir", EXT_PATH(), false, false, &I_apidemo, false);
-    FuriString* path = furi_string_alloc_set(EXT_PATH());
-    file_browser_start(app->filebrowser, path);
+    file_browser_set_callback(app->filebrowser, NULL, context);
+    file_browser_configure(app->filebrowser, "*", EXT_PATH(), false, false, &I_apidemo, false);
+    file_browser_set_item_callback(app->filebrowser, NULL, context);
+    app->Resources->furiString = furi_string_alloc_set(EXT_PATH());
+
+    file_browser_start(app->filebrowser, app->Resources->fileBrowserResultPath);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_FileBrowser);
 }
 bool api_demo_scene_on_event_FileBrowserDemo(void* context, SceneManagerEvent event) {
@@ -456,7 +471,9 @@ bool api_demo_scene_on_event_FileBrowserDemo(void* context, SceneManagerEvent ev
 }
 void api_demo_scene_on_exit_FileBrowserDemo(void* context) {
     ApiDemo* app = context;
+
     file_browser_stop(app->filebrowser);
+    furi_string_free(app->Resources->furiString);
 }
 
 //collection of all on enter, event, and exit methods
@@ -552,9 +569,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     app->byteinput = byte_input_alloc();
     app->dialogex = dialog_ex_alloc();
     app->emptyscreen = empty_screen_alloc();
-    FuriString* name = furi_string_alloc_set(EXT_PATH());
-    app->filebrowser = file_browser_alloc(name);
-    furi_string_free(name);
+    app->filebrowser = file_browser_alloc(app->Resources->fileBrowserResultPath);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -579,12 +594,16 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
+    app->Resources = malloc(sizeof(Resources));
+    app->Resources->fileBrowserResultPath = furi_string_alloc_set(EXT_PATH());
     api_demo_scene_manager_init(app);
     api_demo_view_dispatcher_init(app);
     return app;
 }
 void api_demo_free(ApiDemo* app) {
     scene_manager_free(app->scene_manager);
+    free(app->Resources->fileBrowserResultPath);
+    free(app->Resources);
 
     //dont forget about here
     view_dispatcher_remove_view(app->view_dispatcher, Views_Submenu);
