@@ -8,14 +8,34 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/submenu.h>
 
+#include <gui/modules/button_menu.h>
+#include <gui/modules/button_panel.h>
+#include <gui/modules/byte_input.h>
+
+#define BUTTON_MENU_TEXT  "Placeholder button menu text"
+#define BUTTON_PANEL_TEXT "Placeholder button panel text"
+#define BYTE_INPUT_TEXT   "Placeholder byte input text"
+
 typedef enum {
     Scene_MainMenu,
     Scene_TextBoxOne,
+    Scene_ButtonMenuMenu,
+    Scene_ButtonMenuText,
+    Scene_ButtonMenuDemo,
+    Scene_ButtonPanelMenu,
+    Scene_ButtonPanelText,
+    Scene_ButtonPanelDemo,
+    Scene_ByteInputMenu,
+    Scene_ByteInputText,
+    Scene_ByteInputDemo,
     Scene_count
 } Scene;
 typedef enum {
     Views_Submenu,
-    Views_TextBox
+    Views_TextBox,
+    Views_ButtonMenu,
+    Views_ButtonPanel,
+    Views_ByteInput
 } Views;
 
 typedef struct {
@@ -23,20 +43,40 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     Submenu* submenu;
     TextBox* textbox;
+
+    ButtonMenu* buttonmenu;
+    ButtonPanel* buttonpanel;
+    ByteInput* byteinput;
 } ApiDemo;
+
 void api_demo_submenu_callback(void* context, uint32_t index) {
     ApiDemo* app = context;
     scene_manager_next_scene(app->scene_manager, index);
 }
-void api_demo_scene_on_enter_MainMenu(void* context) {
-    ApiDemo* app = context;
-    submenu_reset(app->submenu);
-    submenu_add_item(app->submenu, "text1", Scene_TextBoxOne, api_demo_submenu_callback, app);
+void api_demo_submenu_add_item(ApiDemo* app, const char* label, uint32_t index) {
+    submenu_add_item(app->submenu, label, index, api_demo_submenu_callback, app);
 }
-bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
+bool unusedOnEvent(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
     return false;
+}
+
+void api_demo_scene_on_enter_MainMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    //add here
+    submenu_add_item(app->submenu, "text1", Scene_TextBoxOne, api_demo_submenu_callback, app);
+    submenu_add_item(
+        app->submenu, "Button Menu", Scene_ButtonMenuMenu, api_demo_submenu_callback, app);
+    submenu_add_item(
+        app->submenu, "Button Panel", Scene_ButtonPanelMenu, api_demo_submenu_callback, app);
+    submenu_add_item(
+        app->submenu, "Byte Input", Scene_ByteInputMenu, api_demo_submenu_callback, app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
 }
 void api_demo_scene_on_exit_MainMenu(void* context) {
     ApiDemo* app = context;
@@ -49,30 +89,271 @@ void api_demo_scene_on_enter_TextBoxOne(void* context) {
     text_box_set_text(
         app->textbox,
         "this is my text, it is very nice text, this is a very long line \nthis is the next line");
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
 }
 bool api_demo_scene_on_event_TextBoxOne(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
-    return false;
+    return unusedOnEvent(context, event);
 }
 void api_demo_scene_on_exit_TextBoxOne(void* context) {
     ApiDemo* app = context;
     text_box_reset(app->textbox);
 }
 
+void api_demo_scene_on_enter_ButtonMenuMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Button Menu Info", Scene_ButtonMenuText);
+    api_demo_submenu_add_item(app, "Button Menu Demo", Scene_ButtonMenuDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_ButtonMenuMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ButtonMenuMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_ButtonMenuText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, BUTTON_MENU_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_ButtonMenuText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ButtonMenuText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void blankButtonMenuCallback(void* context, long index, InputType input) {
+    UNUSED(context);
+    UNUSED(index);
+    UNUSED(input);
+}
+
+void api_demo_scene_on_enter_ButtonMenuDemo(void* context) {
+    ApiDemo* app = context;
+    button_menu_reset(app->buttonmenu);
+    button_menu_add_item(
+        app->buttonmenu,
+        "Common Button",
+        0,
+        blankButtonMenuCallback,
+        ButtonMenuItemTypeCommon,
+        app);
+    button_menu_add_item(
+        app->buttonmenu,
+        "Control Button",
+        0,
+        blankButtonMenuCallback,
+        ButtonMenuItemTypeControl,
+        app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_ButtonMenu);
+}
+bool api_demo_scene_on_event_ButtonMenuDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ButtonMenuDemo(void* context) {
+    ApiDemo* app = context;
+    button_menu_reset(app->buttonmenu);
+}
+
+void api_demo_scene_on_enter_ButtonPanelMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Button Panel Info", Scene_ButtonPanelText);
+    api_demo_submenu_add_item(app, "Button Panel Demo", Scene_ButtonPanelDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_ButtonPanelMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ButtonPanelMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_ButtonPanelText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, BUTTON_PANEL_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_ButtonPanelText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ButtonPanelText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void blankButtonPanel(void* context, uint32_t index) {
+    UNUSED(context);
+    UNUSED(index);
+}
+void addNavigation(void* context, int Vx, int Vy, int x, int y) {
+    ApiDemo* app = context;
+    button_panel_add_item(
+        app->buttonpanel,
+        0,
+        Vx,
+        Vy - 1,
+        x + 18,
+        y,
+        &I_navup_24x18,
+        &I_navup_hover_24x18,
+        *blankButtonPanel,
+        context);
+    button_panel_add_item(
+        app->buttonpanel,
+        1,
+        Vx - 1,
+        Vy,
+        x,
+        y + 18,
+        &I_navleft_18x24,
+        &I_navleft_hover_18x24,
+        *blankButtonPanel,
+        context);
+    button_panel_add_item(
+        app->buttonpanel,
+        0,
+        Vx,
+        Vy + 1,
+        x + 18,
+        y + 42,
+        &I_navdown_24x18,
+        &I_navdown_hover_24x18,
+        *blankButtonPanel,
+        context);
+    button_panel_add_item(
+        app->buttonpanel,
+        0,
+        Vx + 1,
+        Vy,
+        x + 42,
+        y + 18,
+        &I_navright_18x24,
+        &I_navright_hover_18x24,
+        *blankButtonPanel,
+        context);
+    button_panel_add_item(
+        app->buttonpanel,
+        0,
+        Vx,
+        Vy,
+        x + 18,
+        y + 18,
+        &I_navok_24x24,
+        &I_navok_hover_24x24,
+        *blankButtonPanel,
+        context);
+}
+void api_demo_scene_on_enter_ButtonPanelDemo(void* context) {
+    ApiDemo* app = context;
+    button_panel_reset(app->buttonpanel);
+
+    button_panel_reserve(app->buttonpanel, 3, 3);
+    addNavigation(context, 1, 1, 2, 23);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_ButtonPanel);
+}
+bool api_demo_scene_on_event_ButtonPanelDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ButtonPanelDemo(void* context) {
+    ApiDemo* app = context;
+    button_panel_reset(app->buttonpanel);
+}
+
+void api_demo_scene_on_enter_ByteInputMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Byte Input Text", Scene_ByteInputText);
+    api_demo_submenu_add_item(app, "Byte Input Demo", Scene_ByteInputDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_ByteInputMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ByteInputMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_ByteInputText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, BYTE_INPUT_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_ByteInputText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ByteInputText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+void emptySingleCallback(void* context) {
+    UNUSED(context);
+}
+void api_demo_scene_on_enter_ByteInputDemo(void* context) {
+    ApiDemo* app = context;
+    byte_input_set_header_text(app->byteinput, "Your Header Here");
+    uint8_t* bytes = malloc(sizeof(uint8_t) * 8);
+    byte_input_set_result_callback(
+        app->byteinput, emptySingleCallback, emptySingleCallback, context, bytes, 8);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_ByteInput);
+}
+bool api_demo_scene_on_event_ByteInputDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_ByteInputDemo(void* context) {
+    UNUSED(context);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_MainMenu,
-    api_demo_scene_on_enter_TextBoxOne};
+    api_demo_scene_on_enter_TextBoxOne,
+    api_demo_scene_on_enter_ButtonMenuMenu,
+    api_demo_scene_on_enter_ButtonMenuText,
+    api_demo_scene_on_enter_ButtonMenuDemo,
+    api_demo_scene_on_enter_ButtonPanelMenu,
+    api_demo_scene_on_enter_ButtonPanelText,
+    api_demo_scene_on_enter_ButtonPanelDemo,
+    api_demo_scene_on_enter_ByteInputMenu,
+    api_demo_scene_on_enter_ByteInputText,
+    api_demo_scene_on_enter_ByteInputDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,
-    api_demo_scene_on_event_TextBoxOne};
+    api_demo_scene_on_event_TextBoxOne,
+    api_demo_scene_on_event_ButtonMenuMenu,
+    api_demo_scene_on_event_ButtonMenuText,
+    api_demo_scene_on_event_ButtonMenuDemo,
+    api_demo_scene_on_event_ButtonPanelMenu,
+    api_demo_scene_on_event_ButtonPanelText,
+    api_demo_scene_on_event_ButtonPanelDemo,
+    api_demo_scene_on_event_ByteInputMenu,
+    api_demo_scene_on_event_ByteInputText,
+    api_demo_scene_on_event_ByteInputDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,
-    api_demo_scene_on_exit_TextBoxOne};
+    api_demo_scene_on_exit_TextBoxOne,
+    api_demo_scene_on_exit_ButtonMenuMenu,
+    api_demo_scene_on_exit_ButtonMenuText,
+    api_demo_scene_on_exit_ButtonMenuDemo,
+    api_demo_scene_on_exit_ButtonPanelMenu,
+    api_demo_scene_on_exit_ButtonPanelText,
+    api_demo_scene_on_exit_ButtonPanelDemo,
+    api_demo_scene_on_exit_ByteInputMenu,
+    api_demo_scene_on_exit_ByteInputText,
+    api_demo_scene_on_exit_ByteInputDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -91,9 +372,15 @@ bool api_demo_scene_manager_navigation_event_callback(void* context) {
     ApiDemo* app = context;
     return scene_manager_handle_back_event(app->scene_manager);
 }
+//bottom add point
 void api_demo_view_dispatcher_init(ApiDemo* app) {
+    app->view_dispatcher = view_dispatcher_alloc();
+
     app->submenu = submenu_alloc();
     app->textbox = text_box_alloc();
+    app->buttonmenu = button_menu_alloc();
+    app->buttonpanel = button_panel_alloc();
+    app->byteinput = byte_input_alloc();
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -103,6 +390,12 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
 
     view_dispatcher_add_view(app->view_dispatcher, Views_Submenu, submenu_get_view(app->submenu));
     view_dispatcher_add_view(app->view_dispatcher, Views_TextBox, text_box_get_view(app->textbox));
+    view_dispatcher_add_view(
+        app->view_dispatcher, Views_ButtonMenu, button_menu_get_view(app->buttonmenu));
+    view_dispatcher_add_view(
+        app->view_dispatcher, Views_ButtonPanel, button_panel_get_view(app->buttonpanel));
+    view_dispatcher_add_view(
+        app->view_dispatcher, Views_ByteInput, byte_input_get_view(app->byteinput));
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
@@ -115,10 +408,16 @@ void api_demo_free(ApiDemo* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, Views_Submenu);
     view_dispatcher_remove_view(app->view_dispatcher, Views_TextBox);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_ButtonMenu);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_ButtonPanel);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_ByteInput);
     view_dispatcher_free(app->view_dispatcher);
 
     submenu_free(app->submenu);
     text_box_free(app->textbox);
+    button_menu_free(app->buttonmenu);
+    byte_input_free(app->byteinput);
+    button_panel_free(app->buttonpanel);
     free(app);
 }
 int32_t api_demo_app() {
