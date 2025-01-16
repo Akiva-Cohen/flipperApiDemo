@@ -16,6 +16,7 @@
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/empty_screen.h>
 #include <gui/modules/file_browser.h>
+#include <gui/modules/loading.h>
 
 #define BUTTON_MENU_TEXT  "Placeholder button menu text"
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
@@ -23,6 +24,8 @@
 #define DIALOG_EX_TEXT    "Placeholder dialog ex text"
 #define EMPTY_SCREEN_TEXT "Placeholder empty screen text"
 #define FILE_BROWSER_TEXT "Placeholder file browser text"
+#define LOADING_TEXT \
+    "Suppresses all navigation events, making it impossible for the user to use the back button"
 
 typedef enum {
     Scene_MainMenu,
@@ -44,6 +47,9 @@ typedef enum {
     Scene_FileBrowserMenu,
     Scene_FileBrowserText,
     Scene_FileBrowserDemo,
+    Scene_LoadingMenu,
+    Scene_LoadingText,
+    Scene_LoadingDemo,
     Scene_count
 } Scene;
 typedef enum {
@@ -54,9 +60,9 @@ typedef enum {
     Views_ByteInput,
     Views_DialogEx,
     Views_EmptyScreen,
-    Views_FileBrowser
+    Views_FileBrowser,
+    Views_Loading
 } Views;
-
 typedef struct {
     uint8_t* bytes;
     FuriString* furiString;
@@ -75,6 +81,7 @@ typedef struct {
     DialogEx* dialogex;
     EmptyScreen* emptyscreen;
     FileBrowser* filebrowser;
+    Loading* loading;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -100,6 +107,7 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     api_demo_submenu_add_item(app, "Dialog Ex", Scene_DialogExMenu);
     api_demo_submenu_add_item(app, "Empty Screen", Scene_EmptyScreenMenu);
     api_demo_submenu_add_item(app, "File Browser", Scene_FileBrowserMenu);
+    api_demo_submenu_add_item(app, "Loading", Scene_LoadingMenu);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -476,70 +484,88 @@ void api_demo_scene_on_exit_FileBrowserDemo(void* context) {
     furi_string_free(app->Resources->furiString);
 }
 
+void api_demo_scene_on_enter_LoadingMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Loading Text", Scene_LoadingText);
+    api_demo_submenu_add_item(app, "Loading Demo", Scene_LoadingDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_LoadingMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_LoadingMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_LoadingText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, LOADING_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_LoadingText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_LoadingText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void api_demo_scene_on_enter_LoadingDemo(void* context) {
+    ApiDemo* app = context;
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Loading);
+    furi_delay_ms(4000);
+    scene_manager_handle_back_event(app->scene_manager);
+}
+bool api_demo_scene_on_event_LoadingDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_LoadingDemo(void* context) {
+    UNUSED(context);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
-    api_demo_scene_on_enter_MainMenu,
-    api_demo_scene_on_enter_ButtonMenuMenu,
-    api_demo_scene_on_enter_ButtonMenuText,
-    api_demo_scene_on_enter_ButtonMenuDemo,
-    api_demo_scene_on_enter_ButtonPanelMenu,
-    api_demo_scene_on_enter_ButtonPanelText,
-    api_demo_scene_on_enter_ButtonPanelDemo,
-    api_demo_scene_on_enter_ByteInputMenu,
-    api_demo_scene_on_enter_ByteInputText,
-    api_demo_scene_on_enter_ByteInputDemo,
-    api_demo_scene_on_enter_DialogExMenu,
-    api_demo_scene_on_enter_DialogExText,
-    api_demo_scene_on_enter_DialogExDemo,
-    api_demo_scene_on_enter_EmptyScreenMenu,
-    api_demo_scene_on_enter_EmptyScreenText,
-    api_demo_scene_on_enter_EmptyScreenDemo,
-    api_demo_scene_on_enter_FileBrowserMenu,
-    api_demo_scene_on_enter_FileBrowserText,
-    api_demo_scene_on_enter_FileBrowserDemo};
+    api_demo_scene_on_enter_MainMenu,        api_demo_scene_on_enter_ButtonMenuMenu,
+    api_demo_scene_on_enter_ButtonMenuText,  api_demo_scene_on_enter_ButtonMenuDemo,
+    api_demo_scene_on_enter_ButtonPanelMenu, api_demo_scene_on_enter_ButtonPanelText,
+    api_demo_scene_on_enter_ButtonPanelDemo, api_demo_scene_on_enter_ByteInputMenu,
+    api_demo_scene_on_enter_ByteInputText,   api_demo_scene_on_enter_ByteInputDemo,
+    api_demo_scene_on_enter_DialogExMenu,    api_demo_scene_on_enter_DialogExText,
+    api_demo_scene_on_enter_DialogExDemo,    api_demo_scene_on_enter_EmptyScreenMenu,
+    api_demo_scene_on_enter_EmptyScreenText, api_demo_scene_on_enter_EmptyScreenDemo,
+    api_demo_scene_on_enter_FileBrowserMenu, api_demo_scene_on_enter_FileBrowserText,
+    api_demo_scene_on_enter_FileBrowserDemo, api_demo_scene_on_enter_LoadingMenu,
+    api_demo_scene_on_enter_LoadingText,     api_demo_scene_on_enter_LoadingDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
-    api_demo_scene_on_event_MainMenu,
-    api_demo_scene_on_event_ButtonMenuMenu,
-    api_demo_scene_on_event_ButtonMenuText,
-    api_demo_scene_on_event_ButtonMenuDemo,
-    api_demo_scene_on_event_ButtonPanelMenu,
-    api_demo_scene_on_event_ButtonPanelText,
-    api_demo_scene_on_event_ButtonPanelDemo,
-    api_demo_scene_on_event_ByteInputMenu,
-    api_demo_scene_on_event_ByteInputText,
-    api_demo_scene_on_event_ByteInputDemo,
-    api_demo_scene_on_event_DialogExMenu,
-    api_demo_scene_on_event_DialogExText,
-    api_demo_scene_on_event_DialogExDemo,
-    api_demo_scene_on_event_EmptyScreenMenu,
-    api_demo_scene_on_event_EmptyScreenText,
-    api_demo_scene_on_event_EmptyScreenDemo,
-    api_demo_scene_on_event_FileBrowserMenu,
-    api_demo_scene_on_event_FileBrowserText,
-    api_demo_scene_on_event_FileBrowserDemo};
+    api_demo_scene_on_event_MainMenu,        api_demo_scene_on_event_ButtonMenuMenu,
+    api_demo_scene_on_event_ButtonMenuText,  api_demo_scene_on_event_ButtonMenuDemo,
+    api_demo_scene_on_event_ButtonPanelMenu, api_demo_scene_on_event_ButtonPanelText,
+    api_demo_scene_on_event_ButtonPanelDemo, api_demo_scene_on_event_ByteInputMenu,
+    api_demo_scene_on_event_ByteInputText,   api_demo_scene_on_event_ByteInputDemo,
+    api_demo_scene_on_event_DialogExMenu,    api_demo_scene_on_event_DialogExText,
+    api_demo_scene_on_event_DialogExDemo,    api_demo_scene_on_event_EmptyScreenMenu,
+    api_demo_scene_on_event_EmptyScreenText, api_demo_scene_on_event_EmptyScreenDemo,
+    api_demo_scene_on_event_FileBrowserMenu, api_demo_scene_on_event_FileBrowserText,
+    api_demo_scene_on_event_FileBrowserDemo, api_demo_scene_on_event_LoadingMenu,
+    api_demo_scene_on_event_LoadingText,     api_demo_scene_on_event_LoadingDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
-    api_demo_scene_on_exit_MainMenu,
-    api_demo_scene_on_exit_ButtonMenuMenu,
-    api_demo_scene_on_exit_ButtonMenuText,
-    api_demo_scene_on_exit_ButtonMenuDemo,
-    api_demo_scene_on_exit_ButtonPanelMenu,
-    api_demo_scene_on_exit_ButtonPanelText,
-    api_demo_scene_on_exit_ButtonPanelDemo,
-    api_demo_scene_on_exit_ByteInputMenu,
-    api_demo_scene_on_exit_ByteInputText,
-    api_demo_scene_on_exit_ByteInputDemo,
-    api_demo_scene_on_exit_DialogExMenu,
-    api_demo_scene_on_exit_DialogExText,
-    api_demo_scene_on_exit_DialogExDemo,
-    api_demo_scene_on_exit_EmptyScreenMenu,
-    api_demo_scene_on_exit_EmptyScreenText,
-    api_demo_scene_on_exit_EmptyScreenDemo,
-    api_demo_scene_on_exit_FileBrowserMenu,
-    api_demo_scene_on_exit_FileBrowserText,
-    api_demo_scene_on_exit_FileBrowserDemo};
+    api_demo_scene_on_exit_MainMenu,        api_demo_scene_on_exit_ButtonMenuMenu,
+    api_demo_scene_on_exit_ButtonMenuText,  api_demo_scene_on_exit_ButtonMenuDemo,
+    api_demo_scene_on_exit_ButtonPanelMenu, api_demo_scene_on_exit_ButtonPanelText,
+    api_demo_scene_on_exit_ButtonPanelDemo, api_demo_scene_on_exit_ByteInputMenu,
+    api_demo_scene_on_exit_ByteInputText,   api_demo_scene_on_exit_ByteInputDemo,
+    api_demo_scene_on_exit_DialogExMenu,    api_demo_scene_on_exit_DialogExText,
+    api_demo_scene_on_exit_DialogExDemo,    api_demo_scene_on_exit_EmptyScreenMenu,
+    api_demo_scene_on_exit_EmptyScreenText, api_demo_scene_on_exit_EmptyScreenDemo,
+    api_demo_scene_on_exit_FileBrowserMenu, api_demo_scene_on_exit_FileBrowserText,
+    api_demo_scene_on_exit_FileBrowserDemo, api_demo_scene_on_exit_LoadingMenu,
+    api_demo_scene_on_exit_LoadingText,     api_demo_scene_on_exit_LoadingDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -570,6 +596,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     app->dialogex = dialog_ex_alloc();
     app->emptyscreen = empty_screen_alloc();
     app->filebrowser = file_browser_alloc(app->Resources->fileBrowserResultPath);
+    app->loading = loading_alloc();
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -591,6 +618,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
         app->view_dispatcher, Views_EmptyScreen, empty_screen_get_view(app->emptyscreen));
     view_dispatcher_add_view(
         app->view_dispatcher, Views_FileBrowser, file_browser_get_view(app->filebrowser));
+    view_dispatcher_add_view(app->view_dispatcher, Views_Loading, loading_get_view(app->loading));
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
@@ -614,6 +642,7 @@ void api_demo_free(ApiDemo* app) {
     view_dispatcher_remove_view(app->view_dispatcher, Views_DialogEx);
     view_dispatcher_remove_view(app->view_dispatcher, Views_EmptyScreen);
     view_dispatcher_remove_view(app->view_dispatcher, Views_FileBrowser);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_Loading);
     view_dispatcher_free(app->view_dispatcher);
 
     submenu_free(app->submenu);
@@ -624,6 +653,7 @@ void api_demo_free(ApiDemo* app) {
     button_panel_free(app->buttonpanel);
     empty_screen_free(app->emptyscreen);
     file_browser_free(app->filebrowser);
+    loading_free(app->loading);
     free(app);
 }
 int32_t api_demo_app() {
