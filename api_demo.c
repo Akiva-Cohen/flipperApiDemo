@@ -11,14 +11,15 @@
 #include <gui/modules/button_menu.h>
 #include <gui/modules/button_panel.h>
 #include <gui/modules/byte_input.h>
+#include <gui/modules/dialog_ex.h>
 
 #define BUTTON_MENU_TEXT  "Placeholder button menu text"
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
 #define BYTE_INPUT_TEXT   "Placeholder byte input text"
+#define DIALOG_EX_TEXT    "Placeholder dialog ex text"
 
 typedef enum {
     Scene_MainMenu,
-    Scene_TextBoxOne,
     Scene_ButtonMenuMenu,
     Scene_ButtonMenuText,
     Scene_ButtonMenuDemo,
@@ -28,6 +29,9 @@ typedef enum {
     Scene_ByteInputMenu,
     Scene_ByteInputText,
     Scene_ByteInputDemo,
+    Scene_DialogExMenu,
+    Scene_DialogExText,
+    Scene_DialogExDemo,
     Scene_count
 } Scene;
 typedef enum {
@@ -35,7 +39,8 @@ typedef enum {
     Views_TextBox,
     Views_ButtonMenu,
     Views_ButtonPanel,
-    Views_ByteInput
+    Views_ByteInput,
+    Views_DialogEx
 } Views;
 
 typedef struct {
@@ -47,6 +52,7 @@ typedef struct {
     ButtonMenu* buttonmenu;
     ButtonPanel* buttonpanel;
     ByteInput* byteinput;
+    DialogEx* dialogex;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -66,13 +72,14 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
     //add here
-    submenu_add_item(app->submenu, "text1", Scene_TextBoxOne, api_demo_submenu_callback, app);
     submenu_add_item(
         app->submenu, "Button Menu", Scene_ButtonMenuMenu, api_demo_submenu_callback, app);
     submenu_add_item(
         app->submenu, "Button Panel", Scene_ButtonPanelMenu, api_demo_submenu_callback, app);
     submenu_add_item(
         app->submenu, "Byte Input", Scene_ByteInputMenu, api_demo_submenu_callback, app);
+    submenu_add_item(
+        app->submenu, "Dialog Ex", Scene_DialogExMenu, api_demo_submenu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -81,22 +88,6 @@ bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
 void api_demo_scene_on_exit_MainMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-}
-
-void api_demo_scene_on_enter_TextBoxOne(void* context) {
-    ApiDemo* app = context;
-    text_box_reset(app->textbox);
-    text_box_set_text(
-        app->textbox,
-        "this is my text, it is very nice text, this is a very long line \nthis is the next line");
-    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
-}
-bool api_demo_scene_on_event_TextBoxOne(void* context, SceneManagerEvent event) {
-    return unusedOnEvent(context, event);
-}
-void api_demo_scene_on_exit_TextBoxOne(void* context) {
-    ApiDemo* app = context;
-    text_box_reset(app->textbox);
 }
 
 void api_demo_scene_on_enter_ButtonMenuMenu(void* context) {
@@ -296,6 +287,7 @@ void api_demo_scene_on_exit_ByteInputText(void* context) {
     ApiDemo* app = context;
     text_box_reset(app->textbox);
 }
+
 void emptySingleCallback(void* context) {
     UNUSED(context);
 }
@@ -314,11 +306,65 @@ void api_demo_scene_on_exit_ByteInputDemo(void* context) {
     UNUSED(context);
 }
 
+void api_demo_scene_on_enter_DialogExMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Dialog Ex Text", Scene_DialogExText);
+    api_demo_submenu_add_item(app, "Dialog Ex Demo", Scene_DialogExDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_DialogExMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_DialogExMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_DialogExText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, DIALOG_EX_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_DialogExText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_DialogExText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void blankExCallback(DialogExResult result, void* context) {
+    UNUSED(result);
+    UNUSED(context);
+}
+void api_demo_scene_on_enter_DialogExDemo(void* context) {
+    ApiDemo* app = context;
+    dialog_ex_reset(app->dialogex);
+    dialog_ex_set_context(app->dialogex, app);
+    dialog_ex_disable_extended_events(app->dialogex);
+    dialog_ex_set_center_button_text(app->dialogex, "center");
+    dialog_ex_set_left_button_text(app->dialogex, "left");
+    dialog_ex_set_right_button_text(app->dialogex, "right");
+    dialog_ex_set_header(app->dialogex, "Dialog Ex Interface", 5, 5, AlignLeft, AlignTop);
+    dialog_ex_set_result_callback(app->dialogex, blankExCallback);
+    dialog_ex_set_text(
+        app->dialogex, "this is what text looks like\non two lines", 20, 20, AlignLeft, AlignTop);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_DialogEx);
+}
+bool api_demo_scene_on_event_DialogExDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_DialogExDemo(void* context) {
+    ApiDemo* app = context;
+    dialog_ex_reset(app->dialogex);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_MainMenu,
-    api_demo_scene_on_enter_TextBoxOne,
     api_demo_scene_on_enter_ButtonMenuMenu,
     api_demo_scene_on_enter_ButtonMenuText,
     api_demo_scene_on_enter_ButtonMenuDemo,
@@ -327,11 +373,13 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_ButtonPanelDemo,
     api_demo_scene_on_enter_ByteInputMenu,
     api_demo_scene_on_enter_ByteInputText,
-    api_demo_scene_on_enter_ByteInputDemo};
+    api_demo_scene_on_enter_ByteInputDemo,
+    api_demo_scene_on_enter_DialogExMenu,
+    api_demo_scene_on_enter_DialogExText,
+    api_demo_scene_on_enter_DialogExDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,
-    api_demo_scene_on_event_TextBoxOne,
     api_demo_scene_on_event_ButtonMenuMenu,
     api_demo_scene_on_event_ButtonMenuText,
     api_demo_scene_on_event_ButtonMenuDemo,
@@ -340,11 +388,13 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_ButtonPanelDemo,
     api_demo_scene_on_event_ByteInputMenu,
     api_demo_scene_on_event_ByteInputText,
-    api_demo_scene_on_event_ByteInputDemo};
+    api_demo_scene_on_event_ByteInputDemo,
+    api_demo_scene_on_event_DialogExMenu,
+    api_demo_scene_on_event_DialogExText,
+    api_demo_scene_on_event_DialogExDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,
-    api_demo_scene_on_exit_TextBoxOne,
     api_demo_scene_on_exit_ButtonMenuMenu,
     api_demo_scene_on_exit_ButtonMenuText,
     api_demo_scene_on_exit_ButtonMenuDemo,
@@ -353,7 +403,10 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_ButtonPanelDemo,
     api_demo_scene_on_exit_ByteInputMenu,
     api_demo_scene_on_exit_ByteInputText,
-    api_demo_scene_on_exit_ByteInputDemo};
+    api_demo_scene_on_exit_ByteInputDemo,
+    api_demo_scene_on_exit_DialogExMenu,
+    api_demo_scene_on_exit_DialogExText,
+    api_demo_scene_on_exit_DialogExDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -381,6 +434,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     app->buttonmenu = button_menu_alloc();
     app->buttonpanel = button_panel_alloc();
     app->byteinput = byte_input_alloc();
+    app->dialogex = dialog_ex_alloc();
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -396,6 +450,8 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
         app->view_dispatcher, Views_ButtonPanel, button_panel_get_view(app->buttonpanel));
     view_dispatcher_add_view(
         app->view_dispatcher, Views_ByteInput, byte_input_get_view(app->byteinput));
+    view_dispatcher_add_view(
+        app->view_dispatcher, Views_DialogEx, dialog_ex_get_view(app->dialogex));
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
@@ -406,17 +462,20 @@ ApiDemo* api_demo_init() {
 void api_demo_free(ApiDemo* app) {
     scene_manager_free(app->scene_manager);
 
+    //dont forget about here
     view_dispatcher_remove_view(app->view_dispatcher, Views_Submenu);
     view_dispatcher_remove_view(app->view_dispatcher, Views_TextBox);
     view_dispatcher_remove_view(app->view_dispatcher, Views_ButtonMenu);
     view_dispatcher_remove_view(app->view_dispatcher, Views_ButtonPanel);
     view_dispatcher_remove_view(app->view_dispatcher, Views_ByteInput);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_DialogEx);
     view_dispatcher_free(app->view_dispatcher);
 
     submenu_free(app->submenu);
     text_box_free(app->textbox);
     button_menu_free(app->buttonmenu);
     byte_input_free(app->byteinput);
+    dialog_ex_free(app->dialogex);
     button_panel_free(app->buttonpanel);
     free(app);
 }
