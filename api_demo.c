@@ -17,7 +17,7 @@
 #include <gui/modules/empty_screen.h>
 #include <gui/modules/file_browser.h>
 #include <gui/modules/loading.h>
-
+#include <gui/modules/menu.h>
 #define BUTTON_MENU_TEXT  "Placeholder button menu text"
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
 #define BYTE_INPUT_TEXT   "Placeholder byte input text"
@@ -26,6 +26,7 @@
 #define FILE_BROWSER_TEXT "Placeholder file browser text"
 #define LOADING_TEXT \
     "Suppresses all navigation events, making it impossible for the user to use the back button"
+#define MENU_TEXT "Placeholder menu text"
 
 typedef enum {
     Scene_MainMenu,
@@ -50,6 +51,9 @@ typedef enum {
     Scene_LoadingMenu,
     Scene_LoadingText,
     Scene_LoadingDemo,
+    Scene_MenuMenu,
+    Scene_MenuText,
+    Scene_MenuDemo,
     Scene_count
 } Scene;
 typedef enum {
@@ -61,7 +65,8 @@ typedef enum {
     Views_DialogEx,
     Views_EmptyScreen,
     Views_FileBrowser,
-    Views_Loading
+    Views_Loading,
+    Views_Menu
 } Views;
 typedef struct {
     uint8_t* bytes;
@@ -82,6 +87,7 @@ typedef struct {
     EmptyScreen* emptyscreen;
     FileBrowser* filebrowser;
     Loading* loading;
+    Menu* menu;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -108,6 +114,7 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     api_demo_submenu_add_item(app, "Empty Screen", Scene_EmptyScreenMenu);
     api_demo_submenu_add_item(app, "File Browser", Scene_FileBrowserMenu);
     api_demo_submenu_add_item(app, "Loading", Scene_LoadingMenu);
+    api_demo_submenu_add_item(app,"Menu",Scene_MenuMenu);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -526,6 +533,52 @@ void api_demo_scene_on_exit_LoadingDemo(void* context) {
     UNUSED(context);
 }
 
+void api_demo_scene_on_enter_MenuMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Menu Text", Scene_MenuText);
+    api_demo_submenu_add_item(app, "Menu Demo", Scene_MenuDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_MenuMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_MenuMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_MenuText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, MENU_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_MenuText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_MenuText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void api_demo_scene_on_enter_MenuDemo(void* context) {
+    ApiDemo* app = context;
+    menu_reset(app->menu);
+    menu_add_item(app->menu, "Option One", &I_apidemo, 0, NULL, NULL);
+    menu_add_item(app->menu, "Option Two", &I_apidemo, 0, NULL, NULL);
+    menu_add_item(app->menu, "Option Three", &I_apidemo, 0, NULL, NULL);
+    menu_add_item(app->menu, "Option Four", &I_apidemo, 0, NULL, NULL);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Menu);
+}
+bool api_demo_scene_on_event_MenuDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_MenuDemo(void* context) {
+    ApiDemo* app = context;
+    menu_reset(app->menu);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
@@ -539,7 +592,9 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_EmptyScreenText, api_demo_scene_on_enter_EmptyScreenDemo,
     api_demo_scene_on_enter_FileBrowserMenu, api_demo_scene_on_enter_FileBrowserText,
     api_demo_scene_on_enter_FileBrowserDemo, api_demo_scene_on_enter_LoadingMenu,
-    api_demo_scene_on_enter_LoadingText,     api_demo_scene_on_enter_LoadingDemo};
+    api_demo_scene_on_enter_LoadingText,     api_demo_scene_on_enter_LoadingDemo,
+    api_demo_scene_on_enter_MenuMenu,        api_demo_scene_on_enter_MenuText,
+    api_demo_scene_on_enter_MenuDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,        api_demo_scene_on_event_ButtonMenuMenu,
@@ -552,7 +607,9 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_EmptyScreenText, api_demo_scene_on_event_EmptyScreenDemo,
     api_demo_scene_on_event_FileBrowserMenu, api_demo_scene_on_event_FileBrowserText,
     api_demo_scene_on_event_FileBrowserDemo, api_demo_scene_on_event_LoadingMenu,
-    api_demo_scene_on_event_LoadingText,     api_demo_scene_on_event_LoadingDemo};
+    api_demo_scene_on_event_LoadingText,     api_demo_scene_on_event_LoadingDemo,
+    api_demo_scene_on_event_MenuMenu,        api_demo_scene_on_event_MenuText,
+    api_demo_scene_on_event_MenuDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,        api_demo_scene_on_exit_ButtonMenuMenu,
@@ -565,7 +622,9 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_EmptyScreenText, api_demo_scene_on_exit_EmptyScreenDemo,
     api_demo_scene_on_exit_FileBrowserMenu, api_demo_scene_on_exit_FileBrowserText,
     api_demo_scene_on_exit_FileBrowserDemo, api_demo_scene_on_exit_LoadingMenu,
-    api_demo_scene_on_exit_LoadingText,     api_demo_scene_on_exit_LoadingDemo};
+    api_demo_scene_on_exit_LoadingText,     api_demo_scene_on_exit_LoadingDemo,
+    api_demo_scene_on_exit_MenuMenu,        api_demo_scene_on_exit_MenuText,
+    api_demo_scene_on_exit_MenuDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -597,6 +656,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     app->emptyscreen = empty_screen_alloc();
     app->filebrowser = file_browser_alloc(app->Resources->fileBrowserResultPath);
     app->loading = loading_alloc();
+    app->menu = menu_alloc();
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -619,6 +679,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     view_dispatcher_add_view(
         app->view_dispatcher, Views_FileBrowser, file_browser_get_view(app->filebrowser));
     view_dispatcher_add_view(app->view_dispatcher, Views_Loading, loading_get_view(app->loading));
+    view_dispatcher_add_view(app->view_dispatcher, Views_Menu, menu_get_view(app->menu));
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
@@ -643,6 +704,7 @@ void api_demo_free(ApiDemo* app) {
     view_dispatcher_remove_view(app->view_dispatcher, Views_EmptyScreen);
     view_dispatcher_remove_view(app->view_dispatcher, Views_FileBrowser);
     view_dispatcher_remove_view(app->view_dispatcher, Views_Loading);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_Menu);
     view_dispatcher_free(app->view_dispatcher);
 
     submenu_free(app->submenu);
@@ -654,6 +716,7 @@ void api_demo_free(ApiDemo* app) {
     empty_screen_free(app->emptyscreen);
     file_browser_free(app->filebrowser);
     loading_free(app->loading);
+    menu_free(app->menu);
     free(app);
 }
 int32_t api_demo_app() {
