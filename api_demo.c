@@ -129,6 +129,8 @@ typedef struct {
     Popup* popup;
     TextInput* textinput;
     VariableItemList* variableitemlist;
+
+    uint32_t currentItem;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -163,6 +165,7 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     api_demo_submenu_add_item(app, "Text Box", Scene_TextBoxMenu);
     api_demo_submenu_add_item(app, "Text Input", Scene_TextInputMenu);
     api_demo_submenu_add_item(app, "Variable Item List", Scene_VariableItemListMenu);
+    submenu_set_selected_item(app->submenu,app->currentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -170,6 +173,7 @@ bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
 }
 void api_demo_scene_on_exit_MainMenu(void* context) {
     ApiDemo* app = context;
+    app->currentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -1130,6 +1134,7 @@ ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
     app->Resources = malloc(sizeof(Resources));
     app->Resources->fileBrowserResultPath = furi_string_alloc_set(EXT_PATH());
+    app->currentItem = 0;
     api_demo_scene_manager_init(app);
     api_demo_view_dispatcher_init(app);
     return app;
