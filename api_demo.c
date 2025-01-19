@@ -23,6 +23,8 @@
 //submenu
 //text box
 #include <gui/modules/text_input.h>
+#include <gui/modules/variable_item_list.h>
+#include <gui/modules/widget.h>
 
 #define BUTTON_MENU_TEXT  "Placeholder button menu text"
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
@@ -32,12 +34,13 @@
 #define FILE_BROWSER_TEXT "Placeholder file browser text"
 #define LOADING_TEXT \
     "Suppresses all navigation events, making it impossible for the user to use the back button"
-#define MENU_TEXT         "Placeholder menu text"
-#define NUMBER_INPUT_TEXT "Placeholder number input text"
-#define POPUP_TEXT        "Placeholder popup text"
-#define SUBMENU_TEXT      "Placeholder submenu text"
-#define TEXT_BOX_TEXT     "Placeholder text box text"
-#define TEXT_INPUT_TEXT   "Placeholder text input text"
+#define MENU_TEXT               "Placeholder menu text"
+#define NUMBER_INPUT_TEXT       "Placeholder number input text"
+#define POPUP_TEXT              "Placeholder popup text"
+#define SUBMENU_TEXT            "Placeholder submenu text"
+#define TEXT_BOX_TEXT           "Placeholder text box text"
+#define TEXT_INPUT_TEXT         "Placeholder text input text"
+#define VARIABLE_ITEM_LIST_TEXT "Placeholder variable item list text"
 
 typedef enum {
     Scene_MainMenu,
@@ -80,6 +83,9 @@ typedef enum {
     Scene_TextInputMenu,
     Scene_TextInputText,
     Scene_TextInputDemo,
+    Scene_VariableItemListMenu,
+    Scene_VariableItemListText,
+    Scene_VariableItemListDemo,
     Scene_count
 } Scene;
 typedef enum {
@@ -95,7 +101,8 @@ typedef enum {
     Views_Menu,
     Views_NumberInput,
     Views_Popup,
-    Views_TextInput
+    Views_TextInput,
+    Views_VariableItemList
 } Views;
 typedef struct {
     uint8_t* bytes;
@@ -121,6 +128,7 @@ typedef struct {
     NumberInput* numberinput;
     Popup* popup;
     TextInput* textinput;
+    VariableItemList* variableitemlist;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -140,6 +148,7 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
     //add here
+    submenu_set_header(app->submenu,"Modules");
     api_demo_submenu_add_item(app, "Button Menu", Scene_ButtonMenuMenu);
     api_demo_submenu_add_item(app, "Button Panel", Scene_ButtonPanelMenu);
     api_demo_submenu_add_item(app, "Byte Input", Scene_ByteInputMenu);
@@ -153,6 +162,7 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     api_demo_submenu_add_item(app, "Submenu", Scene_SubmenuMenu);
     api_demo_submenu_add_item(app, "Text Box", Scene_TextBoxMenu);
     api_demo_submenu_add_item(app, "Text Input", Scene_TextInputMenu);
+    api_demo_submenu_add_item(app, "Variable Item List", Scene_VariableItemListMenu);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -166,8 +176,9 @@ void api_demo_scene_on_exit_MainMenu(void* context) {
 void api_demo_scene_on_enter_ButtonMenuMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Button Menu Info", Scene_ButtonMenuText);
-    api_demo_submenu_add_item(app, "Button Menu Demo", Scene_ButtonMenuDemo);
+    submenu_set_header(app->submenu,"Button Menu");
+    api_demo_submenu_add_item(app, "Info", Scene_ButtonMenuText);
+    api_demo_submenu_add_item(app, "Demo", Scene_ButtonMenuDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_ButtonMenuMenu(void* context, SceneManagerEvent event) {
@@ -228,8 +239,9 @@ void api_demo_scene_on_exit_ButtonMenuDemo(void* context) {
 void api_demo_scene_on_enter_ButtonPanelMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Button Panel Info", Scene_ButtonPanelText);
-    api_demo_submenu_add_item(app, "Button Panel Demo", Scene_ButtonPanelDemo);
+    submenu_set_header(app->submenu, "Button Panel");
+    api_demo_submenu_add_item(app, "Info", Scene_ButtonPanelText);
+    api_demo_submenu_add_item(app, "Demo", Scene_ButtonPanelDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_ButtonPanelMenu(void* context, SceneManagerEvent event) {
@@ -335,8 +347,9 @@ void api_demo_scene_on_exit_ButtonPanelDemo(void* context) {
 void api_demo_scene_on_enter_ByteInputMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Byte Input Text", Scene_ByteInputText);
-    api_demo_submenu_add_item(app, "Byte Input Demo", Scene_ByteInputDemo);
+    submenu_set_header(app->submenu,"Byte Input");
+    api_demo_submenu_add_item(app, "Info", Scene_ByteInputText);
+    api_demo_submenu_add_item(app, "Demo", Scene_ByteInputDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_ByteInputMenu(void* context, SceneManagerEvent event) {
@@ -388,8 +401,9 @@ void api_demo_scene_on_exit_ByteInputDemo(void* context) {
 void api_demo_scene_on_enter_DialogExMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Dialog Ex Text", Scene_DialogExText);
-    api_demo_submenu_add_item(app, "Dialog Ex Demo", Scene_DialogExDemo);
+    submenu_set_header(app->submenu,"Dialog Ex");
+    api_demo_submenu_add_item(app, "Info", Scene_DialogExText);
+    api_demo_submenu_add_item(app, "Demo", Scene_DialogExDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_DialogExMenu(void* context, SceneManagerEvent event) {
@@ -443,8 +457,9 @@ void api_demo_scene_on_exit_DialogExDemo(void* context) {
 void api_demo_scene_on_enter_EmptyScreenMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Empty Screen Text", Scene_EmptyScreenText);
-    api_demo_submenu_add_item(app, "Empty Screen Demo", Scene_EmptyScreenDemo);
+    submenu_set_header(app->submenu, "Empty Screen");
+    api_demo_submenu_add_item(app, "Info", Scene_EmptyScreenText);
+    api_demo_submenu_add_item(app, "Demo", Scene_EmptyScreenDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_EmptyScreen);
 }
 bool api_demo_scene_on_event_EmptyScreenMenu(void* context, SceneManagerEvent event) {
@@ -483,8 +498,9 @@ void api_demo_scene_on_exit_EmptyScreenDemo(void* context) {
 void api_demo_scene_on_enter_FileBrowserMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "File Browser Text", Scene_FileBrowserText);
-    api_demo_submenu_add_item(app, "File Browser Demo", Scene_FileBrowserDemo);
+    submenu_set_header(app->submenu,"File Browser");
+    api_demo_submenu_add_item(app, "Info", Scene_FileBrowserText);
+    api_demo_submenu_add_item(app, "Demo", Scene_FileBrowserDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_FileBrowserMenu(void* context, SceneManagerEvent event) {
@@ -532,8 +548,9 @@ void api_demo_scene_on_exit_FileBrowserDemo(void* context) {
 void api_demo_scene_on_enter_LoadingMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Loading Text", Scene_LoadingText);
-    api_demo_submenu_add_item(app, "Loading Demo", Scene_LoadingDemo);
+    submenu_set_header(app->submenu,"Loading");
+    api_demo_submenu_add_item(app, "Info", Scene_LoadingText);
+    api_demo_submenu_add_item(app, "Demo", Scene_LoadingDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_LoadingMenu(void* context, SceneManagerEvent event) {
@@ -574,8 +591,9 @@ void api_demo_scene_on_exit_LoadingDemo(void* context) {
 void api_demo_scene_on_enter_MenuMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Menu Text", Scene_MenuText);
-    api_demo_submenu_add_item(app, "Menu Demo", Scene_MenuDemo);
+    submenu_set_header(app->submenu,"Menu");
+    api_demo_submenu_add_item(app, "Info", Scene_MenuText);
+    api_demo_submenu_add_item(app, "Demo", Scene_MenuDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MenuMenu(void* context, SceneManagerEvent event) {
@@ -620,8 +638,9 @@ void api_demo_scene_on_exit_MenuDemo(void* context) {
 void api_demo_scene_on_enter_NumberInputMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Number Input Text", Scene_NumberInputText);
-    api_demo_submenu_add_item(app, "Number Input Demo", Scene_NumberInputDemo);
+    submenu_set_header(app->submenu,"Number Input");
+    api_demo_submenu_add_item(app, "Info", Scene_NumberInputText);
+    api_demo_submenu_add_item(app, "Demo", Scene_NumberInputDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_NumberInputMenu(void* context, SceneManagerEvent event) {
@@ -652,7 +671,7 @@ void numInputCallback(void* context, int32_t number) {
 }
 void api_demo_scene_on_enter_NumberInputDemo(void* context) {
     ApiDemo* app = context;
-    number_input_set_result_callback(app->numberinput, numInputCallback, app, 0, 0, 100);
+    number_input_set_result_callback(app->numberinput, numInputCallback, app,1,0,INT32_MAX);
     number_input_set_header_text(app->numberinput, "Your Header Here");
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_NumberInput);
 }
@@ -666,8 +685,9 @@ void api_demo_scene_on_exit_NumberInputDemo(void* context) {
 void api_demo_scene_on_enter_PopupMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Popup Text", Scene_PopupText);
-    api_demo_submenu_add_item(app, "Popup Demo", Scene_PopupDemo);
+    submenu_set_header(app->submenu,"Popup");
+    api_demo_submenu_add_item(app, "Info", Scene_PopupText);
+    api_demo_submenu_add_item(app, "Demo", Scene_PopupDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_PopupMenu(void* context, SceneManagerEvent event) {
@@ -711,8 +731,9 @@ void api_demo_scene_on_exit_PopupDemo(void* context) {
 void api_demo_scene_on_enter_SubmenuMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Submenu Text", Scene_SubmenuText);
-    api_demo_submenu_add_item(app, "Submenu Demo", Scene_SubmenuDemo);
+    submenu_set_header(app->submenu,"Submenu");
+    api_demo_submenu_add_item(app, "Info", Scene_SubmenuText);
+    api_demo_submenu_add_item(app, "Demo", Scene_SubmenuDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_SubmenuMenu(void* context, SceneManagerEvent event) {
@@ -759,8 +780,9 @@ void api_demo_scene_on_exit_SubmenuDemo(void* context) {
 void api_demo_scene_on_enter_TextBoxMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Text Box Text", Scene_TextBoxText);
-    api_demo_submenu_add_item(app, "Text Box Demo", Scene_TextBoxDemo);
+    submenu_set_header(app->submenu,"Text Box");
+    api_demo_submenu_add_item(app, "Info", Scene_TextBoxText);
+    api_demo_submenu_add_item(app, "Demo", Scene_TextBoxDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_TextBoxMenu(void* context, SceneManagerEvent event) {
@@ -804,8 +826,9 @@ void api_demo_scene_on_exit_TextBoxDemo(void* context) {
 void api_demo_scene_on_enter_TextInputMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    api_demo_submenu_add_item(app, "Text Input Text", Scene_TextInputText);
-    api_demo_submenu_add_item(app, "Text Input Demo", Scene_TextInputDemo);
+    submenu_set_header(app->submenu,"Text Input");
+    api_demo_submenu_add_item(app, "Info", Scene_TextInputText);
+    api_demo_submenu_add_item(app, "Demo", Scene_TextInputDemo);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_TextInputMenu(void* context, SceneManagerEvent event) {
@@ -835,7 +858,8 @@ void api_demo_scene_on_enter_TextInputDemo(void* context) {
     text_input_reset(app->textinput);
     text_input_set_header_text(app->textinput, "Your Header Here");
     app->Resources->textBuffer = malloc(64U);
-    text_input_set_result_callback(app->textinput,NULL,NULL,app->Resources->textBuffer,64,false);
+    text_input_set_result_callback(
+        app->textinput, NULL, NULL, app->Resources->textBuffer, 64, false);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextInput);
 }
 bool api_demo_scene_on_event_TextInputDemo(void* context, SceneManagerEvent event) {
@@ -847,73 +871,192 @@ void api_demo_scene_on_exit_TextInputDemo(void* context) {
     text_input_reset(app->textinput);
 }
 
+void api_demo_scene_on_enter_VariableItemListMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    submenu_set_header(app->submenu,"Variable Item List");
+    api_demo_submenu_add_item(app, "Info", Scene_VariableItemListText);
+    api_demo_submenu_add_item(app, "Demo", Scene_VariableItemListDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_VariableItemListMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_VariableItemListMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_VariableItemListText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, VARIABLE_ITEM_LIST_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher,Views_TextBox);
+}
+bool api_demo_scene_on_event_VariableItemListText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_VariableItemListText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+const char* const options[5] = {"one", "two", "three", "four", "five"};
+static void optionCallbackV(VariableItem* item) {
+    variable_item_set_current_value_text(
+        item, options[variable_item_get_current_value_index(item)]);
+}
+void api_demo_scene_on_enter_VariableItemListDemo(void* context) {
+    ApiDemo* app = context;
+    variable_item_list_reset(app->variableitemlist);
+    variable_item_list_add(app->variableitemlist, "option #:", 5, optionCallbackV, context);
+    variable_item_list_add(app->variableitemlist, "Button", 1, NULL, NULL);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_VariableItemList);
+}
+bool api_demo_scene_on_event_VariableItemListDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_VariableItemListDemo(void* context) {
+    ApiDemo* app = context;
+    variable_item_list_reset(app->variableitemlist);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
-    api_demo_scene_on_enter_MainMenu,        api_demo_scene_on_enter_ButtonMenuMenu,
-    api_demo_scene_on_enter_ButtonMenuText,  api_demo_scene_on_enter_ButtonMenuDemo,
-    api_demo_scene_on_enter_ButtonPanelMenu, api_demo_scene_on_enter_ButtonPanelText,
-    api_demo_scene_on_enter_ButtonPanelDemo, api_demo_scene_on_enter_ByteInputMenu,
-    api_demo_scene_on_enter_ByteInputText,   api_demo_scene_on_enter_ByteInputDemo,
-    api_demo_scene_on_enter_DialogExMenu,    api_demo_scene_on_enter_DialogExText,
-    api_demo_scene_on_enter_DialogExDemo,    api_demo_scene_on_enter_EmptyScreenMenu,
-    api_demo_scene_on_enter_EmptyScreenText, api_demo_scene_on_enter_EmptyScreenDemo,
-    api_demo_scene_on_enter_FileBrowserMenu, api_demo_scene_on_enter_FileBrowserText,
-    api_demo_scene_on_enter_FileBrowserDemo, api_demo_scene_on_enter_LoadingMenu,
-    api_demo_scene_on_enter_LoadingText,     api_demo_scene_on_enter_LoadingDemo,
-    api_demo_scene_on_enter_MenuMenu,        api_demo_scene_on_enter_MenuText,
-    api_demo_scene_on_enter_MenuDemo,        api_demo_scene_on_enter_NumberInputMenu,
-    api_demo_scene_on_enter_NumberInputText, api_demo_scene_on_enter_NumberInputDemo,
-    api_demo_scene_on_enter_PopupMenu,       api_demo_scene_on_enter_PopupText,
-    api_demo_scene_on_enter_PopupDemo,       api_demo_scene_on_enter_SubmenuMenu,
-    api_demo_scene_on_enter_SubmenuText,     api_demo_scene_on_enter_SubmenuDemo,
-    api_demo_scene_on_enter_TextBoxMenu,     api_demo_scene_on_enter_TextBoxText,
-    api_demo_scene_on_enter_TextBoxDemo,     api_demo_scene_on_enter_TextInputMenu,
-    api_demo_scene_on_enter_TextInputText,   api_demo_scene_on_enter_TextInputDemo};
+    api_demo_scene_on_enter_MainMenu,
+    api_demo_scene_on_enter_ButtonMenuMenu,
+    api_demo_scene_on_enter_ButtonMenuText,
+    api_demo_scene_on_enter_ButtonMenuDemo,
+    api_demo_scene_on_enter_ButtonPanelMenu,
+    api_demo_scene_on_enter_ButtonPanelText,
+    api_demo_scene_on_enter_ButtonPanelDemo,
+    api_demo_scene_on_enter_ByteInputMenu,
+    api_demo_scene_on_enter_ByteInputText,
+    api_demo_scene_on_enter_ByteInputDemo,
+    api_demo_scene_on_enter_DialogExMenu,
+    api_demo_scene_on_enter_DialogExText,
+    api_demo_scene_on_enter_DialogExDemo,
+    api_demo_scene_on_enter_EmptyScreenMenu,
+    api_demo_scene_on_enter_EmptyScreenText,
+    api_demo_scene_on_enter_EmptyScreenDemo,
+    api_demo_scene_on_enter_FileBrowserMenu,
+    api_demo_scene_on_enter_FileBrowserText,
+    api_demo_scene_on_enter_FileBrowserDemo,
+    api_demo_scene_on_enter_LoadingMenu,
+    api_demo_scene_on_enter_LoadingText,
+    api_demo_scene_on_enter_LoadingDemo,
+    api_demo_scene_on_enter_MenuMenu,
+    api_demo_scene_on_enter_MenuText,
+    api_demo_scene_on_enter_MenuDemo,
+    api_demo_scene_on_enter_NumberInputMenu,
+    api_demo_scene_on_enter_NumberInputText,
+    api_demo_scene_on_enter_NumberInputDemo,
+    api_demo_scene_on_enter_PopupMenu,
+    api_demo_scene_on_enter_PopupText,
+    api_demo_scene_on_enter_PopupDemo,
+    api_demo_scene_on_enter_SubmenuMenu,
+    api_demo_scene_on_enter_SubmenuText,
+    api_demo_scene_on_enter_SubmenuDemo,
+    api_demo_scene_on_enter_TextBoxMenu,
+    api_demo_scene_on_enter_TextBoxText,
+    api_demo_scene_on_enter_TextBoxDemo,
+    api_demo_scene_on_enter_TextInputMenu,
+    api_demo_scene_on_enter_TextInputText,
+    api_demo_scene_on_enter_TextInputDemo,
+    api_demo_scene_on_enter_VariableItemListMenu,
+    api_demo_scene_on_enter_VariableItemListText,
+    api_demo_scene_on_enter_VariableItemListDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
-    api_demo_scene_on_event_MainMenu,        api_demo_scene_on_event_ButtonMenuMenu,
-    api_demo_scene_on_event_ButtonMenuText,  api_demo_scene_on_event_ButtonMenuDemo,
-    api_demo_scene_on_event_ButtonPanelMenu, api_demo_scene_on_event_ButtonPanelText,
-    api_demo_scene_on_event_ButtonPanelDemo, api_demo_scene_on_event_ByteInputMenu,
-    api_demo_scene_on_event_ByteInputText,   api_demo_scene_on_event_ByteInputDemo,
-    api_demo_scene_on_event_DialogExMenu,    api_demo_scene_on_event_DialogExText,
-    api_demo_scene_on_event_DialogExDemo,    api_demo_scene_on_event_EmptyScreenMenu,
-    api_demo_scene_on_event_EmptyScreenText, api_demo_scene_on_event_EmptyScreenDemo,
-    api_demo_scene_on_event_FileBrowserMenu, api_demo_scene_on_event_FileBrowserText,
-    api_demo_scene_on_event_FileBrowserDemo, api_demo_scene_on_event_LoadingMenu,
-    api_demo_scene_on_event_LoadingText,     api_demo_scene_on_event_LoadingDemo,
-    api_demo_scene_on_event_MenuMenu,        api_demo_scene_on_event_MenuText,
-    api_demo_scene_on_event_MenuDemo,        api_demo_scene_on_event_NumberInputMenu,
-    api_demo_scene_on_event_NumberInputText, api_demo_scene_on_event_NumberInputDemo,
-    api_demo_scene_on_event_PopupMenu,       api_demo_scene_on_event_PopupText,
-    api_demo_scene_on_event_PopupDemo,       api_demo_scene_on_event_SubmenuMenu,
-    api_demo_scene_on_event_SubmenuText,     api_demo_scene_on_event_SubmenuDemo,
-    api_demo_scene_on_event_TextBoxMenu,     api_demo_scene_on_event_TextBoxText,
-    api_demo_scene_on_event_TextBoxDemo,     api_demo_scene_on_event_TextInputMenu,
-    api_demo_scene_on_event_TextInputText,   api_demo_scene_on_event_TextInputDemo};
+    api_demo_scene_on_event_MainMenu,
+    api_demo_scene_on_event_ButtonMenuMenu,
+    api_demo_scene_on_event_ButtonMenuText,
+    api_demo_scene_on_event_ButtonMenuDemo,
+    api_demo_scene_on_event_ButtonPanelMenu,
+    api_demo_scene_on_event_ButtonPanelText,
+    api_demo_scene_on_event_ButtonPanelDemo,
+    api_demo_scene_on_event_ByteInputMenu,
+    api_demo_scene_on_event_ByteInputText,
+    api_demo_scene_on_event_ByteInputDemo,
+    api_demo_scene_on_event_DialogExMenu,
+    api_demo_scene_on_event_DialogExText,
+    api_demo_scene_on_event_DialogExDemo,
+    api_demo_scene_on_event_EmptyScreenMenu,
+    api_demo_scene_on_event_EmptyScreenText,
+    api_demo_scene_on_event_EmptyScreenDemo,
+    api_demo_scene_on_event_FileBrowserMenu,
+    api_demo_scene_on_event_FileBrowserText,
+    api_demo_scene_on_event_FileBrowserDemo,
+    api_demo_scene_on_event_LoadingMenu,
+    api_demo_scene_on_event_LoadingText,
+    api_demo_scene_on_event_LoadingDemo,
+    api_demo_scene_on_event_MenuMenu,
+    api_demo_scene_on_event_MenuText,
+    api_demo_scene_on_event_MenuDemo,
+    api_demo_scene_on_event_NumberInputMenu,
+    api_demo_scene_on_event_NumberInputText,
+    api_demo_scene_on_event_NumberInputDemo,
+    api_demo_scene_on_event_PopupMenu,
+    api_demo_scene_on_event_PopupText,
+    api_demo_scene_on_event_PopupDemo,
+    api_demo_scene_on_event_SubmenuMenu,
+    api_demo_scene_on_event_SubmenuText,
+    api_demo_scene_on_event_SubmenuDemo,
+    api_demo_scene_on_event_TextBoxMenu,
+    api_demo_scene_on_event_TextBoxText,
+    api_demo_scene_on_event_TextBoxDemo,
+    api_demo_scene_on_event_TextInputMenu,
+    api_demo_scene_on_event_TextInputText,
+    api_demo_scene_on_event_TextInputDemo,
+    api_demo_scene_on_event_VariableItemListMenu,
+    api_demo_scene_on_event_VariableItemListText,
+    api_demo_scene_on_event_VariableItemListDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
-    api_demo_scene_on_exit_MainMenu,        api_demo_scene_on_exit_ButtonMenuMenu,
-    api_demo_scene_on_exit_ButtonMenuText,  api_demo_scene_on_exit_ButtonMenuDemo,
-    api_demo_scene_on_exit_ButtonPanelMenu, api_demo_scene_on_exit_ButtonPanelText,
-    api_demo_scene_on_exit_ButtonPanelDemo, api_demo_scene_on_exit_ByteInputMenu,
-    api_demo_scene_on_exit_ByteInputText,   api_demo_scene_on_exit_ByteInputDemo,
-    api_demo_scene_on_exit_DialogExMenu,    api_demo_scene_on_exit_DialogExText,
-    api_demo_scene_on_exit_DialogExDemo,    api_demo_scene_on_exit_EmptyScreenMenu,
-    api_demo_scene_on_exit_EmptyScreenText, api_demo_scene_on_exit_EmptyScreenDemo,
-    api_demo_scene_on_exit_FileBrowserMenu, api_demo_scene_on_exit_FileBrowserText,
-    api_demo_scene_on_exit_FileBrowserDemo, api_demo_scene_on_exit_LoadingMenu,
-    api_demo_scene_on_exit_LoadingText,     api_demo_scene_on_exit_LoadingDemo,
-    api_demo_scene_on_exit_MenuMenu,        api_demo_scene_on_exit_MenuText,
-    api_demo_scene_on_exit_MenuDemo,        api_demo_scene_on_exit_NumberInputMenu,
-    api_demo_scene_on_exit_NumberInputText, api_demo_scene_on_exit_NumberInputDemo,
-    api_demo_scene_on_exit_PopupMenu,       api_demo_scene_on_exit_PopupText,
-    api_demo_scene_on_exit_PopupDemo,       api_demo_scene_on_exit_SubmenuMenu,
-    api_demo_scene_on_exit_SubmenuText,     api_demo_scene_on_exit_SubmenuDemo,
-    api_demo_scene_on_exit_TextBoxMenu,     api_demo_scene_on_exit_TextBoxText,
-    api_demo_scene_on_exit_TextBoxDemo,     api_demo_scene_on_exit_TextInputMenu,
-    api_demo_scene_on_exit_TextInputText,   api_demo_scene_on_exit_TextInputDemo};
+    api_demo_scene_on_exit_MainMenu,
+    api_demo_scene_on_exit_ButtonMenuMenu,
+    api_demo_scene_on_exit_ButtonMenuText,
+    api_demo_scene_on_exit_ButtonMenuDemo,
+    api_demo_scene_on_exit_ButtonPanelMenu,
+    api_demo_scene_on_exit_ButtonPanelText,
+    api_demo_scene_on_exit_ButtonPanelDemo,
+    api_demo_scene_on_exit_ByteInputMenu,
+    api_demo_scene_on_exit_ByteInputText,
+    api_demo_scene_on_exit_ByteInputDemo,
+    api_demo_scene_on_exit_DialogExMenu,
+    api_demo_scene_on_exit_DialogExText,
+    api_demo_scene_on_exit_DialogExDemo,
+    api_demo_scene_on_exit_EmptyScreenMenu,
+    api_demo_scene_on_exit_EmptyScreenText,
+    api_demo_scene_on_exit_EmptyScreenDemo,
+    api_demo_scene_on_exit_FileBrowserMenu,
+    api_demo_scene_on_exit_FileBrowserText,
+    api_demo_scene_on_exit_FileBrowserDemo,
+    api_demo_scene_on_exit_LoadingMenu,
+    api_demo_scene_on_exit_LoadingText,
+    api_demo_scene_on_exit_LoadingDemo,
+    api_demo_scene_on_exit_MenuMenu,
+    api_demo_scene_on_exit_MenuText,
+    api_demo_scene_on_exit_MenuDemo,
+    api_demo_scene_on_exit_NumberInputMenu,
+    api_demo_scene_on_exit_NumberInputText,
+    api_demo_scene_on_exit_NumberInputDemo,
+    api_demo_scene_on_exit_PopupMenu,
+    api_demo_scene_on_exit_PopupText,
+    api_demo_scene_on_exit_PopupDemo,
+    api_demo_scene_on_exit_SubmenuMenu,
+    api_demo_scene_on_exit_SubmenuText,
+    api_demo_scene_on_exit_SubmenuDemo,
+    api_demo_scene_on_exit_TextBoxMenu,
+    api_demo_scene_on_exit_TextBoxText,
+    api_demo_scene_on_exit_TextBoxDemo,
+    api_demo_scene_on_exit_TextInputMenu,
+    api_demo_scene_on_exit_TextInputText,
+    api_demo_scene_on_exit_TextInputDemo,
+    api_demo_scene_on_exit_VariableItemListMenu,
+    api_demo_scene_on_exit_VariableItemListText,
+    api_demo_scene_on_exit_VariableItemListDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -949,6 +1092,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     app->numberinput = number_input_alloc();
     app->popup = popup_alloc();
     app->textinput = text_input_alloc();
+    app->variableitemlist = variable_item_list_alloc();
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -977,6 +1121,10 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     view_dispatcher_add_view(app->view_dispatcher, Views_Popup, popup_get_view(app->popup));
     view_dispatcher_add_view(
         app->view_dispatcher, Views_TextInput, text_input_get_view(app->textinput));
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        Views_VariableItemList,
+        variable_item_list_get_view(app->variableitemlist));
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
@@ -1005,6 +1153,7 @@ void api_demo_free(ApiDemo* app) {
     view_dispatcher_remove_view(app->view_dispatcher, Views_NumberInput);
     view_dispatcher_remove_view(app->view_dispatcher, Views_Popup);
     view_dispatcher_remove_view(app->view_dispatcher, Views_TextInput);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_VariableItemList);
     view_dispatcher_free(app->view_dispatcher);
 
     submenu_free(app->submenu);
@@ -1020,6 +1169,7 @@ void api_demo_free(ApiDemo* app) {
     number_input_free(app->numberinput);
     popup_free(app->popup);
     text_input_free(app->textinput);
+    variable_item_list_free(app->variableitemlist);
     free(app);
 }
 int32_t api_demo_app() {
