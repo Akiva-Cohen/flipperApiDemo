@@ -22,6 +22,7 @@
 #include <gui/modules/popup.h>
 //submenu
 //text box
+#include <gui/modules/text_input.h>
 
 #define BUTTON_MENU_TEXT  "Placeholder button menu text"
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
@@ -36,6 +37,7 @@
 #define POPUP_TEXT        "Placeholder popup text"
 #define SUBMENU_TEXT      "Placeholder submenu text"
 #define TEXT_BOX_TEXT     "Placeholder text box text"
+#define TEXT_INPUT_TEXT   "Placeholder text input text"
 
 typedef enum {
     Scene_MainMenu,
@@ -75,6 +77,9 @@ typedef enum {
     Scene_TextBoxMenu,
     Scene_TextBoxText,
     Scene_TextBoxDemo,
+    Scene_TextInputMenu,
+    Scene_TextInputText,
+    Scene_TextInputDemo,
     Scene_count
 } Scene;
 typedef enum {
@@ -89,12 +94,14 @@ typedef enum {
     Views_Loading,
     Views_Menu,
     Views_NumberInput,
-    Views_Popup
+    Views_Popup,
+    Views_TextInput
 } Views;
 typedef struct {
     uint8_t* bytes;
     FuriString* furiString;
     FuriString* fileBrowserResultPath;
+    char* textBuffer;
 } Resources;
 typedef struct {
     Resources* Resources;
@@ -113,6 +120,7 @@ typedef struct {
     Menu* menu;
     NumberInput* numberinput;
     Popup* popup;
+    TextInput* textinput;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -144,6 +152,7 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     api_demo_submenu_add_item(app, "Popup", Scene_PopupMenu);
     api_demo_submenu_add_item(app, "Submenu", Scene_SubmenuMenu);
     api_demo_submenu_add_item(app, "Text Box", Scene_TextBoxMenu);
+    api_demo_submenu_add_item(app, "Text Input", Scene_TextInputMenu);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -792,6 +801,52 @@ void api_demo_scene_on_exit_TextBoxDemo(void* context) {
     text_box_reset(app->textbox);
 }
 
+void api_demo_scene_on_enter_TextInputMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Text Input Text", Scene_TextInputText);
+    api_demo_submenu_add_item(app, "Text Input Demo", Scene_TextInputDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_TextInputMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_TextInputMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_TextInputText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, TEXT_INPUT_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_TextInputText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_TextInputText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void api_demo_scene_on_enter_TextInputDemo(void* context) {
+    ApiDemo* app = context;
+    text_input_reset(app->textinput);
+    text_input_set_header_text(app->textinput, "Your Header Here");
+    app->Resources->textBuffer = malloc(64U);
+    text_input_set_result_callback(app->textinput,NULL,NULL,app->Resources->textBuffer,64,false);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextInput);
+}
+bool api_demo_scene_on_event_TextInputDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_TextInputDemo(void* context) {
+    ApiDemo* app = context;
+    free(app->Resources->textBuffer);
+    text_input_reset(app->textinput);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
@@ -813,7 +868,8 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_PopupDemo,       api_demo_scene_on_enter_SubmenuMenu,
     api_demo_scene_on_enter_SubmenuText,     api_demo_scene_on_enter_SubmenuDemo,
     api_demo_scene_on_enter_TextBoxMenu,     api_demo_scene_on_enter_TextBoxText,
-    api_demo_scene_on_enter_TextBoxDemo};
+    api_demo_scene_on_enter_TextBoxDemo,     api_demo_scene_on_enter_TextInputMenu,
+    api_demo_scene_on_enter_TextInputText,   api_demo_scene_on_enter_TextInputDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,        api_demo_scene_on_event_ButtonMenuMenu,
@@ -834,7 +890,8 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_PopupDemo,       api_demo_scene_on_event_SubmenuMenu,
     api_demo_scene_on_event_SubmenuText,     api_demo_scene_on_event_SubmenuDemo,
     api_demo_scene_on_event_TextBoxMenu,     api_demo_scene_on_event_TextBoxText,
-    api_demo_scene_on_event_TextBoxDemo};
+    api_demo_scene_on_event_TextBoxDemo,     api_demo_scene_on_event_TextInputMenu,
+    api_demo_scene_on_event_TextInputText,   api_demo_scene_on_event_TextInputDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,        api_demo_scene_on_exit_ButtonMenuMenu,
@@ -855,7 +912,8 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_PopupDemo,       api_demo_scene_on_exit_SubmenuMenu,
     api_demo_scene_on_exit_SubmenuText,     api_demo_scene_on_exit_SubmenuDemo,
     api_demo_scene_on_exit_TextBoxMenu,     api_demo_scene_on_exit_TextBoxText,
-    api_demo_scene_on_exit_TextBoxDemo};
+    api_demo_scene_on_exit_TextBoxDemo,     api_demo_scene_on_exit_TextInputMenu,
+    api_demo_scene_on_exit_TextInputText,   api_demo_scene_on_exit_TextInputDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -890,6 +948,7 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     app->menu = menu_alloc();
     app->numberinput = number_input_alloc();
     app->popup = popup_alloc();
+    app->textinput = text_input_alloc();
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -916,6 +975,8 @@ void api_demo_view_dispatcher_init(ApiDemo* app) {
     view_dispatcher_add_view(
         app->view_dispatcher, Views_NumberInput, number_input_get_view(app->numberinput));
     view_dispatcher_add_view(app->view_dispatcher, Views_Popup, popup_get_view(app->popup));
+    view_dispatcher_add_view(
+        app->view_dispatcher, Views_TextInput, text_input_get_view(app->textinput));
 }
 ApiDemo* api_demo_init() {
     ApiDemo* app = malloc(sizeof(ApiDemo));
@@ -943,6 +1004,7 @@ void api_demo_free(ApiDemo* app) {
     view_dispatcher_remove_view(app->view_dispatcher, Views_Menu);
     view_dispatcher_remove_view(app->view_dispatcher, Views_NumberInput);
     view_dispatcher_remove_view(app->view_dispatcher, Views_Popup);
+    view_dispatcher_remove_view(app->view_dispatcher, Views_TextInput);
     view_dispatcher_free(app->view_dispatcher);
 
     submenu_free(app->submenu);
@@ -957,6 +1019,7 @@ void api_demo_free(ApiDemo* app) {
     menu_free(app->menu);
     number_input_free(app->numberinput);
     popup_free(app->popup);
+    text_input_free(app->textinput);
     free(app);
 }
 int32_t api_demo_app() {
