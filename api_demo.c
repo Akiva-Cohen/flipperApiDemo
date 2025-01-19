@@ -20,6 +20,8 @@
 #include <gui/modules/menu.h>
 #include <gui/modules/number_input.h>
 #include <gui/modules/popup.h>
+//submenu
+//text box
 
 #define BUTTON_MENU_TEXT  "Placeholder button menu text"
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
@@ -32,6 +34,8 @@
 #define MENU_TEXT         "Placeholder menu text"
 #define NUMBER_INPUT_TEXT "Placeholder number input text"
 #define POPUP_TEXT        "Placeholder popup text"
+#define SUBMENU_TEXT      "Placeholder submenu text"
+#define TEXT_BOX_TEXT     "Placeholder text box text"
 
 typedef enum {
     Scene_MainMenu,
@@ -65,6 +69,12 @@ typedef enum {
     Scene_PopupMenu,
     Scene_PopupText,
     Scene_PopupDemo,
+    Scene_SubmenuMenu,
+    Scene_SubmenuText,
+    Scene_SubmenuDemo,
+    Scene_TextBoxMenu,
+    Scene_TextBoxText,
+    Scene_TextBoxDemo,
     Scene_count
 } Scene;
 typedef enum {
@@ -132,6 +142,8 @@ void api_demo_scene_on_enter_MainMenu(void* context) {
     api_demo_submenu_add_item(app, "Menu", Scene_MenuMenu);
     api_demo_submenu_add_item(app, "Number Input", Scene_NumberInputMenu);
     api_demo_submenu_add_item(app, "Popup", Scene_PopupMenu);
+    api_demo_submenu_add_item(app, "Submenu", Scene_SubmenuMenu);
+    api_demo_submenu_add_item(app, "Text Box", Scene_TextBoxMenu);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MainMenu(void* context, SceneManagerEvent event) {
@@ -625,8 +637,13 @@ void api_demo_scene_on_exit_NumberInputText(void* context) {
     text_box_reset(app->textbox);
 }
 
+void numInputCallback(void* context, int32_t number) {
+    UNUSED(context);
+    UNUSED(number);
+}
 void api_demo_scene_on_enter_NumberInputDemo(void* context) {
     ApiDemo* app = context;
+    number_input_set_result_callback(app->numberinput, numInputCallback, app, 0, 0, 100);
     number_input_set_header_text(app->numberinput, "Your Header Here");
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_NumberInput);
 }
@@ -656,7 +673,7 @@ void api_demo_scene_on_enter_PopupText(void* context) {
     ApiDemo* app = context;
     text_box_reset(app->textbox);
     text_box_set_text(app->textbox, POPUP_TEXT);
-    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Popup);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
 }
 bool api_demo_scene_on_event_PopupText(void* context, SceneManagerEvent event) {
     return unusedOnEvent(context, event);
@@ -682,6 +699,99 @@ void api_demo_scene_on_exit_PopupDemo(void* context) {
     popup_reset(app->popup);
 }
 
+void api_demo_scene_on_enter_SubmenuMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Submenu Text", Scene_SubmenuText);
+    api_demo_submenu_add_item(app, "Submenu Demo", Scene_SubmenuDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_SubmenuMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_SubmenuMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_SubmenuText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, SUBMENU_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_SubmenuText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_SubmenuText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void api_demo_scene_on_enter_SubmenuDemo(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    submenu_add_item(app->submenu, "Option 1", 0, NULL, context);
+    submenu_add_item(app->submenu, "Option 2", 0, NULL, context);
+    submenu_add_item(app->submenu, "Option 3", 0, NULL, context);
+    submenu_add_item(app->submenu, "Option 4", 0, NULL, context);
+    submenu_add_item(app->submenu, "Option 5", 0, NULL, context);
+    submenu_add_item(app->submenu, "Option 6", 0, NULL, context);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_SubmenuDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_SubmenuDemo(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_TextBoxMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+    api_demo_submenu_add_item(app, "Text Box Text", Scene_TextBoxText);
+    api_demo_submenu_add_item(app, "Text Box Demo", Scene_TextBoxDemo);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
+}
+bool api_demo_scene_on_event_TextBoxMenu(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_TextBoxMenu(void* context) {
+    ApiDemo* app = context;
+    submenu_reset(app->submenu);
+}
+
+void api_demo_scene_on_enter_TextBoxText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(app->textbox, TEXT_BOX_TEXT);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_TextBoxText(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_TextBoxText(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
+void api_demo_scene_on_enter_TextBoxDemo(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+    text_box_set_text(
+        app->textbox,
+        "This is text in a textbox\nThis is the second line\nThis is what happens when a line goes on for a really really long time (no really, it keeps going(oh you thought id stop now, nope ima keep going (is this text, this is nothing)))");
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_TextBox);
+}
+bool api_demo_scene_on_event_TextBoxDemo(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_TextBoxDemo(void* context) {
+    ApiDemo* app = context;
+    text_box_reset(app->textbox);
+}
+
 //collection of all on enter, event, and exit methods
 //all on enter
 void (*const api_demo_scene_on_enter_handlers[])(void*) = {
@@ -700,7 +810,10 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_MenuDemo,        api_demo_scene_on_enter_NumberInputMenu,
     api_demo_scene_on_enter_NumberInputText, api_demo_scene_on_enter_NumberInputDemo,
     api_demo_scene_on_enter_PopupMenu,       api_demo_scene_on_enter_PopupText,
-    api_demo_scene_on_enter_PopupDemo};
+    api_demo_scene_on_enter_PopupDemo,       api_demo_scene_on_enter_SubmenuMenu,
+    api_demo_scene_on_enter_SubmenuText,     api_demo_scene_on_enter_SubmenuDemo,
+    api_demo_scene_on_enter_TextBoxMenu,     api_demo_scene_on_enter_TextBoxText,
+    api_demo_scene_on_enter_TextBoxDemo};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,        api_demo_scene_on_event_ButtonMenuMenu,
@@ -718,7 +831,10 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MenuDemo,        api_demo_scene_on_event_NumberInputMenu,
     api_demo_scene_on_event_NumberInputText, api_demo_scene_on_event_NumberInputDemo,
     api_demo_scene_on_event_PopupMenu,       api_demo_scene_on_event_PopupText,
-    api_demo_scene_on_event_PopupDemo};
+    api_demo_scene_on_event_PopupDemo,       api_demo_scene_on_event_SubmenuMenu,
+    api_demo_scene_on_event_SubmenuText,     api_demo_scene_on_event_SubmenuDemo,
+    api_demo_scene_on_event_TextBoxMenu,     api_demo_scene_on_event_TextBoxText,
+    api_demo_scene_on_event_TextBoxDemo};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,        api_demo_scene_on_exit_ButtonMenuMenu,
@@ -736,7 +852,10 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MenuDemo,        api_demo_scene_on_exit_NumberInputMenu,
     api_demo_scene_on_exit_NumberInputText, api_demo_scene_on_exit_NumberInputDemo,
     api_demo_scene_on_exit_PopupMenu,       api_demo_scene_on_exit_PopupText,
-    api_demo_scene_on_exit_PopupDemo};
+    api_demo_scene_on_exit_PopupDemo,       api_demo_scene_on_exit_SubmenuMenu,
+    api_demo_scene_on_exit_SubmenuText,     api_demo_scene_on_exit_SubmenuDemo,
+    api_demo_scene_on_exit_TextBoxMenu,     api_demo_scene_on_exit_TextBoxText,
+    api_demo_scene_on_exit_TextBoxDemo};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
