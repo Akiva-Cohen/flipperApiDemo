@@ -86,6 +86,7 @@ typedef enum {
     Scene_VariableItemListMenu,
     Scene_VariableItemListText,
     Scene_VariableItemListDemo,
+    Scene_DialogExSettings,
     Scene_count
 } Scene;
 typedef enum {
@@ -111,6 +112,11 @@ typedef struct {
     char* textBuffer;
 } Resources;
 typedef struct {
+    bool left;
+    bool right;
+    bool center;
+} DialogExSettings;
+typedef struct {
     Resources* Resources;
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
@@ -129,8 +135,12 @@ typedef struct {
     Popup* popup;
     TextInput* textinput;
     VariableItemList* variableitemlist;
+    uint8_t variableItemIndex;
 
     uint32_t currentItem;
+    uint32_t moduleCurrentItem;
+
+    DialogExSettings* exSettings;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -148,6 +158,7 @@ bool unusedOnEvent(void* context, SceneManagerEvent event) {
 
 void api_demo_scene_on_enter_MainMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = 0;
     submenu_reset(app->submenu);
     //add here
     submenu_set_header(app->submenu, "Modules");
@@ -183,6 +194,7 @@ void api_demo_scene_on_enter_ButtonMenuMenu(void* context) {
     submenu_set_header(app->submenu, "Button Menu");
     api_demo_submenu_add_item(app, "Info", Scene_ButtonMenuText);
     api_demo_submenu_add_item(app, "Demo", Scene_ButtonMenuDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_ButtonMenuMenu(void* context, SceneManagerEvent event) {
@@ -190,6 +202,7 @@ bool api_demo_scene_on_event_ButtonMenuMenu(void* context, SceneManagerEvent eve
 }
 void api_demo_scene_on_exit_ButtonMenuMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -246,6 +259,7 @@ void api_demo_scene_on_enter_ButtonPanelMenu(void* context) {
     submenu_set_header(app->submenu, "Button Panel");
     api_demo_submenu_add_item(app, "Info", Scene_ButtonPanelText);
     api_demo_submenu_add_item(app, "Demo", Scene_ButtonPanelDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_ButtonPanelMenu(void* context, SceneManagerEvent event) {
@@ -253,6 +267,7 @@ bool api_demo_scene_on_event_ButtonPanelMenu(void* context, SceneManagerEvent ev
 }
 void api_demo_scene_on_exit_ButtonPanelMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -354,6 +369,7 @@ void api_demo_scene_on_enter_ByteInputMenu(void* context) {
     submenu_set_header(app->submenu, "Byte Input");
     api_demo_submenu_add_item(app, "Info", Scene_ByteInputText);
     api_demo_submenu_add_item(app, "Demo", Scene_ByteInputDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_ByteInputMenu(void* context, SceneManagerEvent event) {
@@ -361,6 +377,7 @@ bool api_demo_scene_on_event_ByteInputMenu(void* context, SceneManagerEvent even
 }
 void api_demo_scene_on_exit_ByteInputMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -408,6 +425,8 @@ void api_demo_scene_on_enter_DialogExMenu(void* context) {
     submenu_set_header(app->submenu, "Dialog Ex");
     api_demo_submenu_add_item(app, "Info", Scene_DialogExText);
     api_demo_submenu_add_item(app, "Demo", Scene_DialogExDemo);
+    api_demo_submenu_add_item(app, "Demo Settings", Scene_DialogExSettings);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_DialogExMenu(void* context, SceneManagerEvent event) {
@@ -415,6 +434,7 @@ bool api_demo_scene_on_event_DialogExMenu(void* context, SceneManagerEvent event
 }
 void api_demo_scene_on_exit_DialogExMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -441,9 +461,15 @@ void api_demo_scene_on_enter_DialogExDemo(void* context) {
     dialog_ex_reset(app->dialogex);
     dialog_ex_set_context(app->dialogex, app);
     dialog_ex_disable_extended_events(app->dialogex);
-    dialog_ex_set_center_button_text(app->dialogex, "center");
-    dialog_ex_set_left_button_text(app->dialogex, "left");
-    dialog_ex_set_right_button_text(app->dialogex, "right");
+    if(app->exSettings->center) {
+        dialog_ex_set_center_button_text(app->dialogex, "center");
+    }
+    if (app->exSettings->left) {
+        dialog_ex_set_left_button_text(app->dialogex, "left");
+    }
+    if (app->exSettings->right) {
+        dialog_ex_set_right_button_text(app->dialogex, "right");
+    }
     dialog_ex_set_header(app->dialogex, "Dialog Ex Interface", 5, 5, AlignLeft, AlignTop);
     dialog_ex_set_result_callback(app->dialogex, blankExCallback);
     dialog_ex_set_text(
@@ -458,12 +484,52 @@ void api_demo_scene_on_exit_DialogExDemo(void* context) {
     dialog_ex_reset(app->dialogex);
 }
 
+const char* const noYes[2] = {"No", "Yes"};
+void exVLeftCallback(VariableItem* item) {
+    ApiDemo* app = variable_item_get_context(item);
+    variable_item_set_current_value_text(item, noYes[variable_item_get_current_value_index(item)]);
+    app->exSettings->left = variable_item_get_current_value_index(item);
+}
+void exVCenterCallback(VariableItem* item) {
+    ApiDemo* app = variable_item_get_context(item);
+    variable_item_set_current_value_text(item, noYes[variable_item_get_current_value_index(item)]);
+    app->exSettings->center = variable_item_get_current_value_index(item);
+}
+void exVRightCallback(VariableItem* item) {
+    ApiDemo* app = variable_item_get_context(item);
+    variable_item_set_current_value_text(item, noYes[variable_item_get_current_value_index(item)]);
+    app->exSettings->right = variable_item_get_current_value_index(item);
+}
+void api_demo_scene_on_enter_DialogExSettings(void* context) {
+    ApiDemo* app = context;
+    variable_item_list_reset(app->variableitemlist);
+    VariableItem* item;
+    item = variable_item_list_add(app->variableitemlist, "Show Left", 2, exVLeftCallback, context);
+    variable_item_set_current_value_index(item,app->exSettings->left);
+    exVLeftCallback(item);
+    item = variable_item_list_add(app->variableitemlist, "Show Center", 2, exVCenterCallback, context);
+    variable_item_set_current_value_index(item,app->exSettings->center);
+    exVCenterCallback(item);
+    item = variable_item_list_add(app->variableitemlist, "Show Right", 2, exVRightCallback, context);
+    variable_item_set_current_value_index(item,app->exSettings->right);
+    exVRightCallback(item);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_VariableItemList);
+}
+bool api_demo_scene_on_event_DialogExSettings(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_DialogExSettings(void* context) {
+    ApiDemo* app = context;
+    variable_item_list_reset(app->variableitemlist);
+}
+
 void api_demo_scene_on_enter_EmptyScreenMenu(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "Empty Screen");
     api_demo_submenu_add_item(app, "Info", Scene_EmptyScreenText);
     api_demo_submenu_add_item(app, "Demo", Scene_EmptyScreenDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_EmptyScreenMenu(void* context, SceneManagerEvent event) {
@@ -471,6 +537,7 @@ bool api_demo_scene_on_event_EmptyScreenMenu(void* context, SceneManagerEvent ev
 }
 void api_demo_scene_on_exit_EmptyScreenMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -505,6 +572,7 @@ void api_demo_scene_on_enter_FileBrowserMenu(void* context) {
     submenu_set_header(app->submenu, "File Browser");
     api_demo_submenu_add_item(app, "Info", Scene_FileBrowserText);
     api_demo_submenu_add_item(app, "Demo", Scene_FileBrowserDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_FileBrowserMenu(void* context, SceneManagerEvent event) {
@@ -512,6 +580,7 @@ bool api_demo_scene_on_event_FileBrowserMenu(void* context, SceneManagerEvent ev
 }
 void api_demo_scene_on_exit_FileBrowserMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -555,6 +624,7 @@ void api_demo_scene_on_enter_LoadingMenu(void* context) {
     submenu_set_header(app->submenu, "Loading");
     api_demo_submenu_add_item(app, "Info", Scene_LoadingText);
     api_demo_submenu_add_item(app, "Demo", Scene_LoadingDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_LoadingMenu(void* context, SceneManagerEvent event) {
@@ -562,6 +632,7 @@ bool api_demo_scene_on_event_LoadingMenu(void* context, SceneManagerEvent event)
 }
 void api_demo_scene_on_exit_LoadingMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -598,6 +669,7 @@ void api_demo_scene_on_enter_MenuMenu(void* context) {
     submenu_set_header(app->submenu, "Menu");
     api_demo_submenu_add_item(app, "Info", Scene_MenuText);
     api_demo_submenu_add_item(app, "Demo", Scene_MenuDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_MenuMenu(void* context, SceneManagerEvent event) {
@@ -605,6 +677,7 @@ bool api_demo_scene_on_event_MenuMenu(void* context, SceneManagerEvent event) {
 }
 void api_demo_scene_on_exit_MenuMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -645,6 +718,7 @@ void api_demo_scene_on_enter_NumberInputMenu(void* context) {
     submenu_set_header(app->submenu, "Number Input");
     api_demo_submenu_add_item(app, "Info", Scene_NumberInputText);
     api_demo_submenu_add_item(app, "Demo", Scene_NumberInputDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_NumberInputMenu(void* context, SceneManagerEvent event) {
@@ -652,6 +726,7 @@ bool api_demo_scene_on_event_NumberInputMenu(void* context, SceneManagerEvent ev
 }
 void api_demo_scene_on_exit_NumberInputMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -692,6 +767,7 @@ void api_demo_scene_on_enter_PopupMenu(void* context) {
     submenu_set_header(app->submenu, "Popup");
     api_demo_submenu_add_item(app, "Info", Scene_PopupText);
     api_demo_submenu_add_item(app, "Demo", Scene_PopupDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_PopupMenu(void* context, SceneManagerEvent event) {
@@ -699,6 +775,7 @@ bool api_demo_scene_on_event_PopupMenu(void* context, SceneManagerEvent event) {
 }
 void api_demo_scene_on_exit_PopupMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -738,6 +815,7 @@ void api_demo_scene_on_enter_SubmenuMenu(void* context) {
     submenu_set_header(app->submenu, "Submenu");
     api_demo_submenu_add_item(app, "Info", Scene_SubmenuText);
     api_demo_submenu_add_item(app, "Demo", Scene_SubmenuDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_SubmenuMenu(void* context, SceneManagerEvent event) {
@@ -745,6 +823,7 @@ bool api_demo_scene_on_event_SubmenuMenu(void* context, SceneManagerEvent event)
 }
 void api_demo_scene_on_exit_SubmenuMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -787,6 +866,7 @@ void api_demo_scene_on_enter_TextBoxMenu(void* context) {
     submenu_set_header(app->submenu, "Text Box");
     api_demo_submenu_add_item(app, "Info", Scene_TextBoxText);
     api_demo_submenu_add_item(app, "Demo", Scene_TextBoxDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_TextBoxMenu(void* context, SceneManagerEvent event) {
@@ -794,6 +874,7 @@ bool api_demo_scene_on_event_TextBoxMenu(void* context, SceneManagerEvent event)
 }
 void api_demo_scene_on_exit_TextBoxMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -833,6 +914,7 @@ void api_demo_scene_on_enter_TextInputMenu(void* context) {
     submenu_set_header(app->submenu, "Text Input");
     api_demo_submenu_add_item(app, "Info", Scene_TextInputText);
     api_demo_submenu_add_item(app, "Demo", Scene_TextInputDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_TextInputMenu(void* context, SceneManagerEvent event) {
@@ -840,6 +922,7 @@ bool api_demo_scene_on_event_TextInputMenu(void* context, SceneManagerEvent even
 }
 void api_demo_scene_on_exit_TextInputMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -881,6 +964,7 @@ void api_demo_scene_on_enter_VariableItemListMenu(void* context) {
     submenu_set_header(app->submenu, "Variable Item List");
     api_demo_submenu_add_item(app, "Info", Scene_VariableItemListText);
     api_demo_submenu_add_item(app, "Demo", Scene_VariableItemListDemo);
+    submenu_set_selected_item(app->submenu,app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_VariableItemListMenu(void* context, SceneManagerEvent event) {
@@ -888,6 +972,7 @@ bool api_demo_scene_on_event_VariableItemListMenu(void* context, SceneManagerEve
 }
 void api_demo_scene_on_exit_VariableItemListMenu(void* context) {
     ApiDemo* app = context;
+    app->moduleCurrentItem = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
 }
 
@@ -907,13 +992,18 @@ void api_demo_scene_on_exit_VariableItemListText(void* context) {
 
 const char* const options[5] = {"one", "two", "three", "four", "five"};
 static void optionCallbackV(VariableItem* item) {
+    ApiDemo* app = variable_item_get_context(item);
     variable_item_set_current_value_text(
         item, options[variable_item_get_current_value_index(item)]);
+        app->variableItemIndex = variable_item_get_current_value_index(item);
 }
 void api_demo_scene_on_enter_VariableItemListDemo(void* context) {
     ApiDemo* app = context;
     variable_item_list_reset(app->variableitemlist);
-    variable_item_list_add(app->variableitemlist, "option #:", 5, optionCallbackV, context);
+    VariableItem* item;
+    item = variable_item_list_add(app->variableitemlist, "option #:", 5, optionCallbackV, context);
+    variable_item_set_current_value_index(item,app->variableItemIndex);
+    optionCallbackV(item);
     variable_item_list_add(app->variableitemlist, "Button", 1, NULL, NULL);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_VariableItemList);
 }
@@ -970,7 +1060,8 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_TextInputDemo,
     api_demo_scene_on_enter_VariableItemListMenu,
     api_demo_scene_on_enter_VariableItemListText,
-    api_demo_scene_on_enter_VariableItemListDemo};
+    api_demo_scene_on_enter_VariableItemListDemo,
+    api_demo_scene_on_enter_DialogExSettings};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,
@@ -1015,7 +1106,8 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_TextInputDemo,
     api_demo_scene_on_event_VariableItemListMenu,
     api_demo_scene_on_event_VariableItemListText,
-    api_demo_scene_on_event_VariableItemListDemo};
+    api_demo_scene_on_event_VariableItemListDemo,
+    api_demo_scene_on_event_DialogExSettings};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,
@@ -1060,7 +1152,8 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_TextInputDemo,
     api_demo_scene_on_exit_VariableItemListMenu,
     api_demo_scene_on_exit_VariableItemListText,
-    api_demo_scene_on_exit_VariableItemListDemo};
+    api_demo_scene_on_exit_VariableItemListDemo,
+    api_demo_scene_on_exit_DialogExSettings};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -1135,6 +1228,11 @@ ApiDemo* api_demo_init() {
     app->Resources = malloc(sizeof(Resources));
     app->Resources->fileBrowserResultPath = furi_string_alloc_set(EXT_PATH());
     app->currentItem = 0;
+    app->variableItemIndex = 0;
+    app->exSettings = malloc(sizeof(DialogExSettings));
+    app->exSettings->left = true;
+    app->exSettings->center = true;
+    app->exSettings->right = true;
     api_demo_scene_manager_init(app);
     api_demo_view_dispatcher_init(app);
     return app;
