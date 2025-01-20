@@ -89,6 +89,7 @@ typedef enum {
     Scene_DialogExSettings,
     Scene_TextBoxSettings,
     Scene_LoadingSettings,
+    Scene_SubmenuSettings,
     Scene_count
 } Scene;
 typedef enum {
@@ -124,6 +125,10 @@ typedef struct {
     bool focus;
     bool font;
 } TextBoxSettings;
+typedef struct {
+    bool header;
+    uint32_t position;
+} SubmenuSettings;
 
 typedef struct {
     Resources* Resources;
@@ -152,6 +157,7 @@ typedef struct {
     DialogExSettings* exSettings;
     TextBoxSettings* textBoxSettings;
     int32_t loadingTime;
+    SubmenuSettings* submenuSettings;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -680,10 +686,11 @@ void api_demo_scene_on_exit_LoadingDemo(void* context) {
 void loadingTimeCallback(void* context, int32_t number) {
     ApiDemo* app = context;
     app->loadingTime = number;
+    scene_manager_handle_back_event(app->scene_manager);
 }
 void api_demo_scene_on_enter_LoadingSettings(void* context) {
     ApiDemo* app = context;
-    number_input_set_header_text(app->numberinput, "Loading time (MS) (500-60,000)");
+    number_input_set_header_text(app->numberinput, "Loading Time(MS)(500-60,000)");
     number_input_set_result_callback(
         app->numberinput, loadingTimeCallback, context, app->loadingTime, 500, 60000);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_NumberInput);
@@ -847,6 +854,7 @@ void api_demo_scene_on_enter_SubmenuMenu(void* context) {
     submenu_set_header(app->submenu, "Submenu");
     api_demo_submenu_add_item(app, "Info", Scene_SubmenuText);
     api_demo_submenu_add_item(app, "Demo", Scene_SubmenuDemo);
+    api_demo_submenu_add_item(app, "Demo Settings",Scene_SubmenuSettings);
     submenu_set_selected_item(app->submenu, app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
@@ -873,15 +881,24 @@ void api_demo_scene_on_exit_SubmenuText(void* context) {
     text_box_reset(app->textbox);
 }
 
+void unusedOnSubmenu(void* context, uint32_t index) {
+    UNUSED(context);
+    UNUSED(index);
+}
 void api_demo_scene_on_enter_SubmenuDemo(void* context) {
     ApiDemo* app = context;
     submenu_reset(app->submenu);
-    submenu_add_item(app->submenu, "Option 1", 0, NULL, context);
-    submenu_add_item(app->submenu, "Option 2", 0, NULL, context);
-    submenu_add_item(app->submenu, "Option 3", 0, NULL, context);
-    submenu_add_item(app->submenu, "Option 4", 0, NULL, context);
-    submenu_add_item(app->submenu, "Option 5", 0, NULL, context);
-    submenu_add_item(app->submenu, "Option 6", 0, NULL, context);
+    submenu_add_item(app->submenu, "Option 1", 0, unusedOnSubmenu, context);
+    submenu_add_item(app->submenu, "Option 2", 1, unusedOnSubmenu, context);
+    submenu_add_item(app->submenu, "Option 3", 2, unusedOnSubmenu, context);
+    submenu_add_item(app->submenu, "Option 4", 3, unusedOnSubmenu, context);
+    submenu_add_item(app->submenu, "Option 5", 4, unusedOnSubmenu, context);
+    submenu_add_item(app->submenu, "Option 6", 5, unusedOnSubmenu, context);
+    
+    if (app->submenuSettings->header) {
+        submenu_set_header(app->submenu,"Submenu Header");
+    }
+    submenu_set_selected_item(app->submenu,app->submenuSettings->position);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_SubmenuDemo(void* context, SceneManagerEvent event) {
@@ -889,7 +906,39 @@ bool api_demo_scene_on_event_SubmenuDemo(void* context, SceneManagerEvent event)
 }
 void api_demo_scene_on_exit_SubmenuDemo(void* context) {
     ApiDemo* app = context;
+    app->submenuSettings->position = submenu_get_selected_item(app->submenu);
     submenu_reset(app->submenu);
+}
+
+void submenuHeaderSet(VariableItem* item) {
+    ApiDemo* app = variable_item_get_context(item);
+    app->submenuSettings->header = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item,noYes[app->submenuSettings->header]);
+}
+const char* const nums[6] = {"one","two","three","four","five","six"};
+void submenuStartSet(VariableItem* item) {
+    ApiDemo* app = variable_item_get_context(item);
+    app->submenuSettings->position = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item,nums[app->submenuSettings->position]);
+}
+void api_demo_scene_on_enter_SubmenuSettings(void* context) {
+    ApiDemo* app = context;
+    variable_item_list_reset(app->variableitemlist);
+    VariableItem* item;
+    item = variable_item_list_add(app->variableitemlist,"Show Header:",2,submenuHeaderSet,context);
+    variable_item_set_current_value_index(item,app->submenuSettings->header);
+    submenuHeaderSet(item);
+    item = variable_item_list_add(app->variableitemlist,"Start Position",6,submenuStartSet,context);
+    variable_item_set_current_value_index(item,app->submenuSettings->position);
+    submenuStartSet(item);
+    view_dispatcher_switch_to_view(app->view_dispatcher,Views_VariableItemList);
+}
+bool api_demo_scene_on_event_SubmenuSettings(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_SubmenuSettings(void* context) {
+    ApiDemo* app = context;
+    variable_item_list_reset(app->variableitemlist);
 }
 
 void api_demo_scene_on_enter_TextBoxMenu(void* context) {
@@ -1130,7 +1179,8 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_VariableItemListDemo,
     api_demo_scene_on_enter_DialogExSettings,
     api_demo_scene_on_enter_TextBoxSettings,
-    api_demo_scene_on_enter_LoadingSettings};
+    api_demo_scene_on_enter_LoadingSettings,
+    api_demo_scene_on_enter_SubmenuSettings};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,
@@ -1178,7 +1228,8 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_VariableItemListDemo,
     api_demo_scene_on_event_DialogExSettings,
     api_demo_scene_on_event_TextBoxSettings,
-    api_demo_scene_on_event_LoadingSettings};
+    api_demo_scene_on_event_LoadingSettings,
+    api_demo_scene_on_event_SubmenuSettings};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,
@@ -1226,7 +1277,8 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_VariableItemListDemo,
     api_demo_scene_on_exit_DialogExSettings,
     api_demo_scene_on_exit_TextBoxSettings,
-    api_demo_scene_on_exit_LoadingSettings};
+    api_demo_scene_on_exit_LoadingSettings,
+    api_demo_scene_on_exit_SubmenuSettings};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -1310,6 +1362,9 @@ ApiDemo* api_demo_init() {
     app->textBoxSettings->focus = false;
     app->textBoxSettings->font = false;
     app->loadingTime = 4000;
+    app->submenuSettings = malloc(sizeof(SubmenuSettings));
+    app->submenuSettings->header = false;
+    app->submenuSettings->position = 0;
     api_demo_scene_manager_init(app);
     api_demo_view_dispatcher_init(app);
     return app;
@@ -1320,6 +1375,7 @@ void api_demo_free(ApiDemo* app) {
     free(app->Resources);
     free(app->exSettings);
     free(app->textBoxSettings);
+    free(app->submenuSettings);
 
     //dont forget about here
     view_dispatcher_remove_view(app->view_dispatcher, Views_Submenu);
