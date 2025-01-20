@@ -26,17 +26,28 @@
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/widget.h>
 
-#define BUTTON_MENU_TEXT  "Placeholder button menu text"
+#define BUTTON_MENU_TEXT \
+    "A list of buttons in portrait\
+    \nEach button can be either a \"Common Button\" or a \"Control Button\"\
+    \nThe only difference between the button types is how they look\
+    \nThe buttons send events to their callback whenever they are pressed, released, or short pressed."
 #define BUTTON_PANEL_TEXT "Placeholder button panel text"
 #define BYTE_INPUT_TEXT   "Placeholder byte input text"
-#define DIALOG_EX_TEXT    "Placeholder dialog ex text"
-#define EMPTY_SCREEN_TEXT "Placeholder empty screen text"
+#define DIALOG_EX_TEXT \
+    "A dialog allowing users to choose between left, right, and center options\
+    \nIt has a definable header, text, and icon.\
+    \nEach Button also has definable text"
+#define EMPTY_SCREEN_TEXT "It's just an empty screen"
 #define FILE_BROWSER_TEXT "Placeholder file browser text"
 #define LOADING_TEXT \
-    "Suppresses all navigation events, making it impossible for the user to use the back button"
-#define MENU_TEXT               "Placeholder menu text"
-#define NUMBER_INPUT_TEXT       "Placeholder number input text"
-#define POPUP_TEXT              "Placeholder popup text"
+    "A simple loading animation\
+\nSuppresses all navigation events, making it impossible for the user to use the back button"
+#define MENU_TEXT         "Placeholder menu text"
+#define NUMBER_INPUT_TEXT "Placeholder number input text"
+#define POPUP_TEXT \
+    "A basic way of displaying information\
+    \nCan be set with a header, text, and an icon\
+    \nCan also be defined with a timeout and callback"
 #define SUBMENU_TEXT            "Placeholder submenu text"
 #define TEXT_BOX_TEXT           "Placeholder text box text"
 #define TEXT_INPUT_TEXT         "Placeholder text input text"
@@ -854,7 +865,7 @@ void api_demo_scene_on_enter_SubmenuMenu(void* context) {
     submenu_set_header(app->submenu, "Submenu");
     api_demo_submenu_add_item(app, "Info", Scene_SubmenuText);
     api_demo_submenu_add_item(app, "Demo", Scene_SubmenuDemo);
-    api_demo_submenu_add_item(app, "Demo Settings",Scene_SubmenuSettings);
+    api_demo_submenu_add_item(app, "Demo Settings", Scene_SubmenuSettings);
     submenu_set_selected_item(app->submenu, app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
@@ -894,11 +905,11 @@ void api_demo_scene_on_enter_SubmenuDemo(void* context) {
     submenu_add_item(app->submenu, "Option 4", 3, unusedOnSubmenu, context);
     submenu_add_item(app->submenu, "Option 5", 4, unusedOnSubmenu, context);
     submenu_add_item(app->submenu, "Option 6", 5, unusedOnSubmenu, context);
-    
-    if (app->submenuSettings->header) {
-        submenu_set_header(app->submenu,"Submenu Header");
+
+    if(app->submenuSettings->header) {
+        submenu_set_header(app->submenu, "Submenu Header");
     }
-    submenu_set_selected_item(app->submenu,app->submenuSettings->position);
+    submenu_set_selected_item(app->submenu, app->submenuSettings->position);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
 bool api_demo_scene_on_event_SubmenuDemo(void* context, SceneManagerEvent event) {
@@ -913,25 +924,27 @@ void api_demo_scene_on_exit_SubmenuDemo(void* context) {
 void submenuHeaderSet(VariableItem* item) {
     ApiDemo* app = variable_item_get_context(item);
     app->submenuSettings->header = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item,noYes[app->submenuSettings->header]);
+    variable_item_set_current_value_text(item, noYes[app->submenuSettings->header]);
 }
-const char* const nums[6] = {"one","two","three","four","five","six"};
+const char* const nums[6] = {"one", "two", "three", "four", "five", "six"};
 void submenuStartSet(VariableItem* item) {
     ApiDemo* app = variable_item_get_context(item);
     app->submenuSettings->position = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item,nums[app->submenuSettings->position]);
+    variable_item_set_current_value_text(item, nums[app->submenuSettings->position]);
 }
 void api_demo_scene_on_enter_SubmenuSettings(void* context) {
     ApiDemo* app = context;
     variable_item_list_reset(app->variableitemlist);
     VariableItem* item;
-    item = variable_item_list_add(app->variableitemlist,"Show Header:",2,submenuHeaderSet,context);
-    variable_item_set_current_value_index(item,app->submenuSettings->header);
+    item = variable_item_list_add(
+        app->variableitemlist, "Show Header:", 2, submenuHeaderSet, context);
+    variable_item_set_current_value_index(item, app->submenuSettings->header);
     submenuHeaderSet(item);
-    item = variable_item_list_add(app->variableitemlist,"Start Position",6,submenuStartSet,context);
-    variable_item_set_current_value_index(item,app->submenuSettings->position);
+    item = variable_item_list_add(
+        app->variableitemlist, "Start Position", 6, submenuStartSet, context);
+    variable_item_set_current_value_index(item, app->submenuSettings->position);
     submenuStartSet(item);
-    view_dispatcher_switch_to_view(app->view_dispatcher,Views_VariableItemList);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_VariableItemList);
 }
 bool api_demo_scene_on_event_SubmenuSettings(void* context, SceneManagerEvent event) {
     return unusedOnEvent(context, event);
