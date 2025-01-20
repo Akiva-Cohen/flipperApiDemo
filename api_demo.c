@@ -88,6 +88,7 @@ typedef enum {
     Scene_VariableItemListDemo,
     Scene_DialogExSettings,
     Scene_TextBoxSettings,
+    Scene_LoadingSettings,
     Scene_count
 } Scene;
 typedef enum {
@@ -150,6 +151,7 @@ typedef struct {
 
     DialogExSettings* exSettings;
     TextBoxSettings* textBoxSettings;
+    int32_t loadingTime;
 } ApiDemo;
 
 void api_demo_submenu_callback(void* context, uint32_t index) {
@@ -635,6 +637,7 @@ void api_demo_scene_on_enter_LoadingMenu(void* context) {
     submenu_set_header(app->submenu, "Loading");
     api_demo_submenu_add_item(app, "Info", Scene_LoadingText);
     api_demo_submenu_add_item(app, "Demo", Scene_LoadingDemo);
+    api_demo_submenu_add_item(app, "Set Demo Time", Scene_LoadingSettings);
     submenu_set_selected_item(app->submenu, app->moduleCurrentItem);
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Submenu);
 }
@@ -664,13 +667,31 @@ void api_demo_scene_on_exit_LoadingText(void* context) {
 void api_demo_scene_on_enter_LoadingDemo(void* context) {
     ApiDemo* app = context;
     view_dispatcher_switch_to_view(app->view_dispatcher, Views_Loading);
-    furi_delay_ms(4000);
+    furi_delay_ms(app->loadingTime);
     scene_manager_handle_back_event(app->scene_manager);
 }
 bool api_demo_scene_on_event_LoadingDemo(void* context, SceneManagerEvent event) {
     return unusedOnEvent(context, event);
 }
 void api_demo_scene_on_exit_LoadingDemo(void* context) {
+    UNUSED(context);
+}
+
+void loadingTimeCallback(void* context, int32_t number) {
+    ApiDemo* app = context;
+    app->loadingTime = number;
+}
+void api_demo_scene_on_enter_LoadingSettings(void* context) {
+    ApiDemo* app = context;
+    number_input_set_header_text(app->numberinput, "Loading time (MS) (500-60,000)");
+    number_input_set_result_callback(
+        app->numberinput, loadingTimeCallback, context, app->loadingTime, 500, 60000);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Views_NumberInput);
+}
+bool api_demo_scene_on_event_LoadingSettings(void* context, SceneManagerEvent event) {
+    return unusedOnEvent(context, event);
+}
+void api_demo_scene_on_exit_LoadingSettings(void* context) {
     UNUSED(context);
 }
 
@@ -1108,7 +1129,8 @@ void (*const api_demo_scene_on_enter_handlers[])(void*) = {
     api_demo_scene_on_enter_VariableItemListText,
     api_demo_scene_on_enter_VariableItemListDemo,
     api_demo_scene_on_enter_DialogExSettings,
-    api_demo_scene_on_enter_TextBoxSettings};
+    api_demo_scene_on_enter_TextBoxSettings,
+    api_demo_scene_on_enter_LoadingSettings};
 //all on event
 bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_MainMenu,
@@ -1155,7 +1177,8 @@ bool (*const api_demo_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     api_demo_scene_on_event_VariableItemListText,
     api_demo_scene_on_event_VariableItemListDemo,
     api_demo_scene_on_event_DialogExSettings,
-    api_demo_scene_on_event_TextBoxSettings};
+    api_demo_scene_on_event_TextBoxSettings,
+    api_demo_scene_on_event_LoadingSettings};
 //all on exit
 void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_MainMenu,
@@ -1202,7 +1225,8 @@ void (*const api_demo_scene_on_exit_handlers[])(void*) = {
     api_demo_scene_on_exit_VariableItemListText,
     api_demo_scene_on_exit_VariableItemListDemo,
     api_demo_scene_on_exit_DialogExSettings,
-    api_demo_scene_on_exit_TextBoxSettings};
+    api_demo_scene_on_exit_TextBoxSettings,
+    api_demo_scene_on_exit_LoadingSettings};
 //combination
 const SceneManagerHandlers api_demo_scene_event_handlers = {
     .on_enter_handlers = api_demo_scene_on_enter_handlers,
@@ -1285,6 +1309,7 @@ ApiDemo* api_demo_init() {
     app->textBoxSettings = malloc(sizeof(TextBoxSettings));
     app->textBoxSettings->focus = false;
     app->textBoxSettings->font = false;
+    app->loadingTime = 4000;
     api_demo_scene_manager_init(app);
     api_demo_view_dispatcher_init(app);
     return app;
