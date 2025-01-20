@@ -31,27 +31,43 @@
     \nEach button can be either a \"Common Button\" or a \"Control Button\"\
     \nThe only difference between the button types is how they look\
     \nThe buttons send events to their callback whenever they are pressed, released, or short pressed."
-#define BUTTON_PANEL_TEXT "Placeholder button panel text"
-#define BYTE_INPUT_TEXT   "Placeholder byte input text"
+#define BUTTON_PANEL_TEXT \
+    "A customizable grid of customizable buttons.\
+    \nEach button has a defined image for when hovering and when not\
+    \nOnly runs the button callback on short press"
+#define BYTE_INPUT_TEXT \
+    "A way to input bytes\nWhen starting it it needs a uint8* of bytes to write to, and you need to tell it the length"
 #define DIALOG_EX_TEXT \
     "A dialog allowing users to choose between left, right, and center options\
     \nIt has a definable header, text, and icon.\
     \nEach Button also has definable text"
 #define EMPTY_SCREEN_TEXT "It's just an empty screen"
-#define FILE_BROWSER_TEXT "Placeholder file browser text"
+#define FILE_BROWSER_TEXT \
+    "A file Browser\
+    \nMust be initialized with a path that still exists to be checked when used\
+    \nProgramer can set the start path and target file extension, in addition to the icon of files with that extension"
 #define LOADING_TEXT \
     "A simple loading animation\
 \nSuppresses all navigation events, making it impossible for the user to use the back button"
-#define MENU_TEXT         "Placeholder menu text"
-#define NUMBER_INPUT_TEXT "Placeholder number input text"
+#define MENU_TEXT \
+    "A list of options\
+    \nEach option has an icon\
+    \nIf the icon is animated, it will show the first frame when not selected and run the animation while the user is hovering on it"
+#define NUMBER_INPUT_TEXT "Number input\nMinimum, maximum,and start value can be set"
 #define POPUP_TEXT \
     "A basic way of displaying information\
     \nCan be set with a header, text, and an icon\
     \nCan also be defined with a timeout and callback"
-#define SUBMENU_TEXT            "Placeholder submenu text"
-#define TEXT_BOX_TEXT           "Placeholder text box text"
-#define TEXT_INPUT_TEXT         "Placeholder text input text"
-#define VARIABLE_ITEM_LIST_TEXT "Placeholder variable item list text"
+#define SUBMENU_TEXT "Just like menu, but with more compact entries and no icons"
+#define TEXT_BOX_TEXT \
+    "A scrollable text box\
+    \nIt has 2 fonts (hex and text)\
+    \nIt can also be opened starting on the top or bottom"
+#define TEXT_INPUT_TEXT "A text input field, needs a string to output."
+#define VARIABLE_ITEM_LIST_TEXT \
+    "A list of variable items\
+    \nEach variable item can have \"pages\" you can flip through, with a callback to set text\
+    \nThere is also a on press callback allowing you to use entries as buttons"
 
 typedef enum {
     Scene_MainMenu,
