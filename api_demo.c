@@ -24,7 +24,6 @@
 //text box
 #include <gui/modules/text_input.h>
 #include <gui/modules/variable_item_list.h>
-#include <gui/modules/widget.h>
 
 #define BUTTON_MENU_TEXT \
     "A list of buttons in portrait\
